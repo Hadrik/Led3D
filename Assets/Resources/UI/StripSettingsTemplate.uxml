@@ -1,0 +1,10 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/Resources/UI/Foldout_content.uss?fileID=7433441132597879392&amp;guid=7d1a74bd4e83f434ebf9526a1f487e0a&amp;type=3#Foldout_content" />
+    <ui:VisualElement name="Root" style="flex-grow: 1;">
+        <ui:SliderInt label="Pixel count" value="42" high-value="100" name="PixelsSlider" data-source-type="Leds.StripType.Linear, Assembly-CSharp" />
+        <ui:Toggle label="Visualize" name="Visualize" />
+        <ui:Foldout text="Pixel preview" name="PixelsListFoldout" style="flex-grow: 1;">
+            <ui:ListView name="PixelsList" show-border="false" virtualization-method="DynamicHeight" fixed-item-height="1" style="flex-grow: 1;" />
+        </ui:Foldout>
+    </ui:VisualElement>
+</ui:UXML>

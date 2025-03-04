@@ -1,0 +1,6 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <ui:VisualElement name="Root" style="flex-grow: initial; flex-shrink: initial; flex-direction: row; min-width: initial; min-height: initial;">
+        <ui:Label text="Index" name="PixelIndex" style="width: 50px;" />
+        <ui:VisualElement name="ColorPreview" style="width: 100%;" />
+    </ui:VisualElement>
+</ui:UXML>

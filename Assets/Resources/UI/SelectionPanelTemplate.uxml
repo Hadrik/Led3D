@@ -1,0 +1,12 @@
+<engine:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:engine="UnityEngine.UIElements" xmlns:editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <engine:VisualElement name="Root" style="flex-grow: 1;">
+        <engine:Foldout text="Drivers" name="DriversFoldout" style="flex-grow: 1;">
+            <engine:ListView name="DriversList" item-template="project://database/Assets/Resources/UI/DriverTemplate.uxml?fileID=9197481963319205126&amp;guid=c6c9cbc88ab21b24b96cfa338dda5679&amp;type=3#DriverTemplate" virtualization-method="DynamicHeight" fixed-item-height="1" style="flex-grow: 1;" />
+            <engine:Button text="Add driver" name="AddDriver" />
+        </engine:Foldout>
+        <engine:Foldout text="Volumes" name="VolumesFoldout" style="flex-grow: 1;">
+            <engine:ListView name="VolumesList" virtualization-method="DynamicHeight" fixed-item-height="1" style="flex-grow: 1;" />
+            <engine:Button text="Add volume" name="AddVolume" />
+        </engine:Foldout>
+    </engine:VisualElement>
+</engine:UXML>
