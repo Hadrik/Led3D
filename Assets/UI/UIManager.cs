@@ -1,51 +1,71 @@
-﻿using Global;
-using Leds;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace UI
 {
     public class UIManager : MonoBehaviour
     {
+        private static VisualTreeAsset _rootAsset;
+        
+        
         private UIDocument _document;
-        private GameController _gameController;
-        private VisualElement _root;
+        private DetailPaneController _detailPaneController;
+        private SelectionPaneController _selectionPaneController;
+        private SelectionManager _selectionManager;
+        private ScrollView _detailView;
         
         private void Awake()
         {
-            _document = GetComponent<UIDocument>();
-            if (_document == null)
-            {
-                _document = gameObject.AddComponent<UIDocument>();
-            }
-            _root = _document.rootVisualElement;
-
-            _gameController = GameObject.FindWithTag("GameController").GetComponent<GameController>();
+            _rootAsset = Resources.Load<VisualTreeAsset>("UI/RootTemplate");
         }
-
+        
         private void Start()
         {
-            var template = Resources.Load<VisualTreeAsset>("UI/Main");
-            var main = template.Instantiate();
+            _document = GetComponent<UIDocument>();
+            _selectionManager = new SelectionManager();
+            _selectionManager.SelectionChanged += OnSelectionChanged;
             
-            var selection = main.Q<ScrollView>("Selection");
-            var detail = main.Q<ScrollView>("Detail");
+            _detailPaneController = new DetailPaneController(_selectionManager);
+            _selectionPaneController = new SelectionPaneController(_selectionManager);
             
-            selection.Add(_gameController.GenerateUI());
-            detail.SetEnabled(false);
-            detail.style.display = DisplayStyle.None;
+            var root = _rootAsset.Instantiate();
+            var selection = root.Q<ScrollView>("Selection");
+            _detailView = root.Q<ScrollView>("Detail");
+            DetailHide();
             
-            _root.Add(main);
+            selection.Add(_selectionPaneController.Create());
+            _detailView.Add(_detailPaneController.Create());
+            
+            root.style.height = Length.Percent(100);
+            _document.rootVisualElement.Add(root);
+        }
+        
+        private void OnDestroy()
+        {
+            _detailPaneController.Destroy();
+            _selectionPaneController.Destroy();
         }
 
-        public void ShowStripDetail(IStrip strip)
+        private void OnSelectionChanged(ISelectable selectable)
         {
-            var detail = strip.GenerateUI();
-            var detailView = _root.Q<ScrollView>("Detail");
-            detailView.Clear();
-            detailView.Add(detail);
-            detailView.SetEnabled(true);
-            detailView.style.display = DisplayStyle.Flex;
+            if (selectable is null)
+            {
+                DetailHide();
+            }
+            else
+            {
+                DetailShow();
+            }
+        }
+
+        private void DetailShow()
+        {
+            _detailView.style.display = DisplayStyle.Flex;
+        }
+
+        private void DetailHide()
+        {
+            _detailView.style.display = DisplayStyle.None;
         }
     }
 }

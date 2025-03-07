@@ -1,34 +1,37 @@
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using Leds.UI;
+using Leds.Interfaces;
 using Tools;
-using UI;
 using UnityEngine;
-using UnityEngine.UIElements;
 using Linear = Leds.StripType.Linear;
 
 namespace Leds
 {
-    public class Driver : MonoBehaviour, IUIGenerator
+    public class Driver : MonoBehaviour, IDriver
     {
-        private List<IStrip> _strips = new();
-        private VisualElement _myUI;
-        private UIManager _manager;
+        private List<BaseStrip> _strips = new();
+        public IReadOnlyList<IStrip> Strips => _strips.AsReadOnly();
+        public string Name => name;
 
         [SerializeField, SerializeProperty] private bool visualize;
-
-        private bool Visualize
+        public bool Visualize
         {
             get => visualize;
             set
             {
+                if (value == visualize) return;
                 visualize = value;
                 foreach (var strip in _strips)
                 {
                     strip.Visualize = visualize;
                 }
+                VisualizationChanged?.Invoke();
             }
         }
+
+        public event Action<IStrip> StripAdded;
+        public event Action<IStrip> StripRemoved;
+        public event Action VisualizationChanged;
 
 
         [SerializeField, SerializeProperty] private GameObject visualisationPrefab;
@@ -47,7 +50,6 @@ namespace Leds
 
         private void Start()
         {
-            _manager = GameObject.FindWithTag("UI Manager").GetComponent<UIManager>();
             var pf = Resources.Load<GameObject>("Prefabs/PixelVisualization");
             if (pf is null)
             {
@@ -58,8 +60,18 @@ namespace Leds
                 VisualisationPrefab = pf;
             }
         }
+        
+        public void Destroy()
+        {
+            foreach (var strip in _strips)
+            {
+                strip.Destroy();
+            }
+            _strips.Clear();
+            Destroy(gameObject);
+        }
 
-        private void AddStrip<T>() where T : IStrip
+        public void AddStrip<T>() where T : IStrip
         {
             var pf = Resources.Load<GameObject>("Prefabs/Strip");
             var strip = Instantiate(pf, transform);
@@ -72,42 +84,20 @@ namespace Leds
             }
 
             _strips.Add(component);
-            
-            _myUI?.Q<ListView>("StripsList").Rebuild();
+            StripAdded?.Invoke(component);
         }
-        
-        public VisualElement GenerateUI()
+
+        public void RemoveStrip(IStrip strip)
         {
-            var template = Resources.Load<VisualTreeAsset>("UI/DriverTemplate");
-            var stripTemplate = Resources.Load<VisualTreeAsset>("UI/StripNameTemplate");
-            var root = template.Instantiate();
-            
-            var stripList = root.Q<ListView>("StripsList");
-            var addStripButton = root.Q<Button>("AddStrip");
-            
-            stripList.itemsSource = _strips;
-            stripList.makeItem = () => stripTemplate.Instantiate();
-            stripList.bindItem = (element, i) =>
+            var found = _strips.Find(s => ReferenceEquals(s, strip));
+            if (found is null)
             {
-                var n = element.Q<Label>("Name");
-                n.text = _strips[i].Name;
-                // element.Add(_strips[i].GenerateUI());
-            };
-            stripList.selectionChanged += selection =>
-            {
-                var stripName = ((IStrip)selection.First()).Name;
-                var strip = _strips.Find(strip => strip.Name == stripName);
-                _manager.ShowStripDetail(strip);
-            };
-            
-            addStripButton.clicked += () =>
-            {
-                AddStrip<Linear>();
-                stripList.Rebuild();
-            };
-            
-            _myUI = root;
-            return root;
+                Debug.LogError($"Driver {name} tried to remove non-existing strip {strip.Name}");
+                return;
+            }
+            found.Destroy();
+            _strips.Remove(found);
+            StripRemoved?.Invoke(found);
         }
     }
 }

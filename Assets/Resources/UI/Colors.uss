@@ -1,0 +1,4 @@
+.unity-collection-view {
+    -unity-background-image-tint-color: rgba(118, 73, 73, 0.54);
+    background-color: rgba(75, 50, 50, 0.18);
+}

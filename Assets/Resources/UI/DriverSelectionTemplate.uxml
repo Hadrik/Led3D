@@ -1,0 +1,11 @@
+<engine:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:engine="UnityEngine.UIElements" xmlns:editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Resources/UI/Foldout_content.uss?fileID=7433441132597879392&amp;guid=7d1a74bd4e83f434ebf9526a1f487e0a&amp;type=3#Foldout_content" />
+    <engine:VisualElement style="flex-grow: 0; flex-direction: row;">
+        <engine:Label text="Driver name" name="Name" style="flex-grow: 1; align-self: center;" />
+        <engine:Button text="X" name="Remove" />
+    </engine:VisualElement>
+    <engine:Foldout text="Strips" name="StripsFoldout" focusable="false" style="flex-grow: 1;">
+        <engine:ListView name="StripsList" show-border="false" fixed-item-height="1" virtualization-method="DynamicHeight" focusable="false" style="flex-grow: 1;" />
+    </engine:Foldout>
+    <engine:Button text="Add strip" name="AddStrip" />
+</engine:UXML>

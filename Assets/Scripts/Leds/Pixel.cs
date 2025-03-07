@@ -1,22 +1,21 @@
+using System;
 using JetBrains.Annotations;
-using Leds.UI;
-using UnityEditor.UIElements;
+using Leds.Interfaces;
 using UnityEngine;
-using UnityEngine.UIElements;
 using Volumes;
+using Object = UnityEngine.Object;
 
 namespace Leds
 {
-    public class Pixel : IUIGenerator
+    public class Pixel : IPixel
     {
-        public Transform Transform { get; set; }
+        public Vector3 Position { get; set; }
         public Color Color { get; set; }
         public int Index { get; set; }
         [CanBeNull] private Renderer Renderer { get; set; }
         [CanBeNull] private VolumeController Volume { get; set; }
 
         [CanBeNull] private GameObject _visualObject;
-        [CanBeNull] private TemplateContainer _templateContainer;
 
         private bool _visualize;
         public bool Visualize
@@ -25,15 +24,15 @@ namespace Leds
             set
             {
                 _visualize = value;
-                
                 _visualObject?.SetActive(value);
             }
         }
 
+        public event Action<Color> ColorChanged;
+
         public void SetPrefab(GameObject prefab, Transform parent)
         {
             _visualObject = Object.Instantiate(prefab, parent);
-            Transform = _visualObject!.transform;
             Renderer = _visualObject!.GetComponent<Renderer>();
             _visualObject.SetActive(Visualize);
         }
@@ -49,12 +48,11 @@ namespace Leds
             
             var prefab = Resources.Load<GameObject>("Prefabs/PixelVisualization");
             SetPrefab(prefab, parent);
-            Transform.position = position;
         }
 
         public void Destroy()
         {
-            if (_visualObject != null)
+            if (_visualObject is not null)
             {
                 Object.Destroy(_visualObject);
             }
@@ -62,40 +60,14 @@ namespace Leds
         
         public void Update()
         {
-            if (Visualize == false) return;
-            if (_visualObject is null) return;
-            if (Renderer is null) return;
+            var color = Volume?.SampleColorAt(Position) ?? Color;
+            if (color == Color) return;
             
-            Renderer.material.color = Volume?.SampleColorAt(Transform.position) ?? Color;
-            if (_templateContainer is null) return;
-            _templateContainer.Q<VisualElement>("ColorPreview").style.backgroundColor = Renderer.material.color;
-        }
-
-        public VisualElement GenerateUI()
-        {
-            var template = Resources.Load<VisualTreeAsset>("UI/PixelTemplate");
-            var root = template.Instantiate();
-            _templateContainer = root;
-
-            var index = root.Q<Label>("PixelIndex");
-            var color = root.Q<VisualElement>("ColorPreview");
-
-            index.text = $"P {Index}";
-            color.style.backgroundColor = Color;
+            Color = color;
+            ColorChanged?.Invoke(Color);
             
-            return root;
-            /*
-            var root = new Box();
-
-            var label = new Label($"Pixel {Index}");
-            root.Add(label);
-
-            var colorField = new ColorField("Color");
-            colorField.value = Color;
-            root.Add(colorField);
-
-            return root;
-            */
+            if (Renderer is null || _visualObject is null || _visualize == false) return;
+            Renderer.material.color = Color;
         }
     }
 }
