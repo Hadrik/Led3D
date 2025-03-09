@@ -1,13 +1,11 @@
 <engine:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:engine="UnityEngine.UIElements" xmlns:editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/Resources/UI/Colors.uss?fileID=7433441132597879392&amp;guid=2aff283882ed3d8428b2f212eee605b0&amp;type=3#Colors" />
-    <engine:VisualElement name="Root" style="flex-grow: 1;">
-        <engine:Foldout text="Drivers" name="DriversFoldout" focusable="false" style="flex-grow: 1;">
-            <engine:ListView name="DriversList" virtualization-method="DynamicHeight" fixed-item-height="1" focusable="false" selection-type="None" style="flex-grow: 1;" />
-            <engine:Button text="Add driver" name="AddDriver" />
-        </engine:Foldout>
-        <engine:Foldout text="Volumes" name="VolumesFoldout" focusable="false" style="flex-grow: 1;">
-            <engine:ListView name="VolumesList" virtualization-method="DynamicHeight" fixed-item-height="1" focusable="false" style="flex-grow: 1;" />
-            <engine:Button text="Add volume" name="AddVolume" />
-        </engine:Foldout>
-    </engine:VisualElement>
+    <engine:Foldout text="Drivers" name="DriversFoldout" focusable="false" style="flex-grow: 1;">
+        <engine:ListView name="DriversList" virtualization-method="DynamicHeight" fixed-item-height="1" focusable="false" selection-type="None" style="flex-grow: 1;" />
+        <engine:Button text="Add driver" name="AddDriver" focusable="false" />
+    </engine:Foldout>
+    <engine:Foldout text="Volumes" name="VolumesFoldout" focusable="false" style="flex-grow: 1;">
+        <engine:ListView name="VolumesList" virtualization-method="DynamicHeight" fixed-item-height="1" focusable="false" style="flex-grow: 1;" />
+        <engine:Button text="Add volume" name="AddVolume" focusable="false" />
+    </engine:Foldout>
 </engine:UXML>

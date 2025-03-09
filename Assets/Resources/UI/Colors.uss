@@ -1,4 +1,52 @@
 .unity-collection-view {
-    -unity-background-image-tint-color: rgba(118, 73, 73, 0.54);
     background-color: rgba(75, 50, 50, 0.18);
+}
+
+ScrollView {
+    background-color: rgb(43, 45, 48);
+    border-width: 1px;
+    border-color: rgb(30, 31, 34);
+}
+
+Label {
+    color: rgb(255, 255, 255);
+    -unity-font-style: bold;
+    -unity-font-definition: url("project://database/Assets/UI%20Toolkit/UnityThemes/UnityDefaultRuntimeTheme.tss?fileID=2230732570650464555&guid=a257af8c2b3b8ab47935e90c15a52ba7&type=3#NotInter-Regular");
+}
+
+#unity-checkmark {
+    background-image: url("project://database/Assets/UI%20Toolkit/UnityThemes/UnityDefaultRuntimeTheme.tss?fileID=-1304905567622442630&guid=a257af8c2b3b8ab47935e90c15a52ba7&type=3#arrow-down@2x");
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+
+Button {
+    background-color: rgb(34, 36, 38);
+    color: rgb(255, 255, 255);
+    -unity-font-style: bold;
+    border-radius: 10px;
+    transition-property: background-color;
+    transition-timing-function: ease-in-out;
+    transition-duration: 0.15s;
+    border-left-color: rgba(0, 0, 0, 0);
+    border-right-color: rgba(0, 0, 0, 0);
+    border-top-color: rgba(0, 0, 0, 0);
+    border-bottom-color: rgba(0, 0, 0, 0);
+    border-top-width: 0;
+    border-right-width: 0;
+    border-bottom-width: 0;
+    border-left-width: 0;
+}
+
+Button:hover {
+    background-color: rgb(43, 47, 51);
+    color: rgb(255, 255, 255);
+    -unity-font-style: bold;
+    border-radius: 10px;
+    transition-property: background-color;
+    transition-timing-function: ease-in-out;
+    transition-duration: 0.15s;
+}
+
+.unity-list-view__item:hover {
+    background-color: rgba(0, 0, 0, 0);
 }
