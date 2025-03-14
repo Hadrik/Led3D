@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using UI;
 using UnityEngine;
 
-namespace Leds
+namespace Leds.Interfaces
 {
-    public interface IStrip
+    public interface IStrip : IUIProvider
     {
         string Name { get; set; }
         bool Visualize { get; set; }
@@ -19,6 +19,5 @@ namespace Leds
         
         // Methods
         void SetPixelPrefab(GameObject prefab);
-        // void Destroy();
     }
 }

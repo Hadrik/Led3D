@@ -1,11 +1,19 @@
 .unity-collection-view {
-    background-color: rgba(75, 50, 50, 0.18);
+    background-color: rgba(0, 0, 0, 0);
 }
 
 ScrollView {
     background-color: rgb(43, 45, 48);
     border-width: 1px;
     border-color: rgb(30, 31, 34);
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+    border-bottom-right-radius: 15px;
+    border-bottom-left-radius: 15px;
+    border-top-width: 5px;
+    border-right-width: 5px;
+    border-bottom-width: 5px;
+    border-left-width: 5px;
 }
 
 Label {
@@ -14,7 +22,7 @@ Label {
     -unity-font-definition: url("project://database/Assets/UI%20Toolkit/UnityThemes/UnityDefaultRuntimeTheme.tss?fileID=2230732570650464555&guid=a257af8c2b3b8ab47935e90c15a52ba7&type=3#NotInter-Regular");
 }
 
-#unity-checkmark {
+.unity-foldout__checkmark {
     background-image: url("project://database/Assets/UI%20Toolkit/UnityThemes/UnityDefaultRuntimeTheme.tss?fileID=-1304905567622442630&guid=a257af8c2b3b8ab47935e90c15a52ba7&type=3#arrow-down@2x");
     -unity-background-image-tint-color: rgb(255, 255, 255);
 }

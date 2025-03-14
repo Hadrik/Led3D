@@ -1,0 +1,8 @@
+<engine:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:engine="UnityEngine.UIElements" xmlns:editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Resources/UI/Colors.uss?fileID=7433441132597879392&amp;guid=2aff283882ed3d8428b2f212eee605b0&amp;type=3#Colors" />
+    <engine:VisualElement name="PopupRoot" style="flex-grow: 1; background-color: rgb(12, 12, 12); border-top-left-radius: 15px; border-top-right-radius: 15px; border-bottom-right-radius: 15px; border-bottom-left-radius: 15px; border-top-width: 3px; border-right-width: 3px; border-bottom-width: 3px; border-left-width: 3px; border-left-color: rgb(55, 55, 55); border-right-color: rgb(55, 55, 55); border-top-color: rgb(55, 55, 55); border-bottom-color: rgb(55, 55, 55);">
+        <engine:Label text="Label" name="Title" style="align-self: center; padding-right: 0; padding-left: 0; margin-right: 0; margin-left: 0;" />
+        <engine:ListView name="List" />
+        <engine:Button text="Cancel" name="Cancel" />
+    </engine:VisualElement>
+</engine:UXML>

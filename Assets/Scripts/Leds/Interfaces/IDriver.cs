@@ -4,7 +4,7 @@ using UI;
 
 namespace Leds.Interfaces
 {
-    public interface IDriver
+    public interface IDriver : IUIProvider
     {
         string Name { get; }
         IReadOnlyList<IStrip> Strips { get; }

@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using JetBrains.Annotations;
 using Leds.Interfaces;
+using UI.ControlElementDescriptors;
 using UnityEngine;
 using Volumes;
 using Object = UnityEngine.Object;
@@ -10,10 +12,10 @@ namespace Leds
     public class Pixel : IPixel
     {
         public Vector3 Position { get; set; }
-        public Color Color { get; set; }
+        public Color Color { get; private set; }
         public int Index { get; set; }
         [CanBeNull] private Renderer Renderer { get; set; }
-        [CanBeNull] private VolumeController Volume { get; set; }
+        [CanBeNull] public BaseVolume BaseVolume { get; set; }
 
         [CanBeNull] private GameObject _visualObject;
 
@@ -37,9 +39,9 @@ namespace Leds
             _visualObject.SetActive(Visualize);
         }
         
-        public Pixel(int index, Vector3 position, VolumeController volume = null, Transform parent = null, bool visualize = false)
+        public Pixel(int index, BaseVolume baseVolume = null, Transform parent = null, bool visualize = false)
         {
-            Volume = volume;
+            BaseVolume = baseVolume;
             Index = index;
             Color = Color.magenta;
             Visualize = visualize;
@@ -60,7 +62,7 @@ namespace Leds
         
         public void Update()
         {
-            var color = Volume?.SampleColorAt(Position) ?? Color;
+            var color = BaseVolume?.SampleColorAt(Position) ?? Color;
             if (color == Color) return;
             
             Color = color;
@@ -68,6 +70,18 @@ namespace Leds
             
             if (Renderer is null || _visualObject is null || _visualize == false) return;
             Renderer.material.color = Color;
+        }
+        
+        public IEnumerable<IControlDescriptor> GetUIControls()
+        {
+            yield return new BoxCD(
+                "Pixel",
+                new IControlDescriptor[]{
+                    new LabelCD(Index.ToString()), // TODO: breaks on name change
+                    new ColorCD("Color", () => Color)
+                },
+                new[] { 1, 1 }
+                );
         }
     }
 }

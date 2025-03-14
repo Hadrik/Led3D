@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Leds.Interfaces;
 using Tools;
+using UI.ControlElementDescriptors;
 using UnityEngine;
 using Linear = Leds.StripType.Linear;
 
@@ -77,7 +78,7 @@ namespace Leds
             var strip = Instantiate(pf, transform);
             strip.name = $"Strip_{_strips.Count}";
 
-            var component = strip.AddComponent<Linear>();
+            var component = strip.AddComponent<Linear>(); // TODO: load T component idk
             if (VisualisationPrefab is not null)
             {
                 component.SetPixelPrefab(visualisationPrefab);
@@ -92,12 +93,20 @@ namespace Leds
             var found = _strips.Find(s => ReferenceEquals(s, strip));
             if (found is null)
             {
-                Debug.LogError($"Driver {name} tried to remove non-existing strip {strip.Name}");
+                Debug.LogError($"Driver '{name}' tried to remove non-existing strip '{strip.Name}'");
                 return;
             }
             found.Destroy();
             _strips.Remove(found);
             StripRemoved?.Invoke(found);
+        }
+        
+        public IEnumerable<IControlDescriptor> GetUIControls()
+        {
+            yield return new ToggleCD(
+                "Visualize",
+                () => Visualize,
+                b => Visualize = b);
         }
     }
 }

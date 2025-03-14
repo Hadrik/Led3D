@@ -1,0 +1,15 @@
+VisualElement {
+    flex-direction: row;
+}
+
+VisualElement > Button {
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+
+VisualElement > Label {
+    flex-grow: 1;
+    flex-shrink: 0;
+    align-self: center;
+    margin-left: 8px;
+}

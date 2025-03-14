@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using Leds.Interfaces;
 using Tools;
-using UI;
+using UI.ControlElementDescriptors;
 using UnityEngine;
 using Volumes;
 
@@ -30,17 +31,17 @@ namespace Leds
 
         public Transform Transform { get; set; }
         
-        private VolumeController _currentVolume;
-        public VolumeController CurrentVolume
+        private BaseVolume _currentBaseVolume;
+        public BaseVolume CurrentBaseVolume
         {
-            get => _currentVolume;
+            get => _currentBaseVolume;
             set
             {
-                _currentVolume = value;
-                // foreach (var pixel in Pixels)
-                // {
-                //     pixel.CurrentVolume = _currentVolume;
-                // }
+                _currentBaseVolume = value;
+                foreach (var pixel in Pixels)
+                {
+                    pixel.BaseVolume = _currentBaseVolume;
+                }
             }
         }
 
@@ -84,6 +85,19 @@ namespace Leds
                 pixel.Destroy();
             }
             Destroy(gameObject);
+        }
+
+        public virtual IEnumerable<IControlDescriptor> GetUIControls()
+        {
+            yield return new ToggleCD(
+                "Visualize",
+                () => Visualize,
+                b => Visualize = b);
+
+            yield return new SliderCD(
+                "Pixel Count",
+                () => PixelCount,
+                i => PixelCount = i);
         }
     }
 }

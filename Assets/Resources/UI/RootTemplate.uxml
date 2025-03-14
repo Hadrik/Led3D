@@ -1,7 +1,16 @@
 <engine:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:engine="UnityEngine.UIElements" xmlns:editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/Resources/UI/Colors.uss?fileID=7433441132597879392&amp;guid=2aff283882ed3d8428b2f212eee605b0&amp;type=3#Colors" />
     <engine:VisualElement style="flex-grow: 1; flex-direction: row; height: 100%;">
-        <engine:ScrollView name="Selection" style="left: 0; height: 100%; width: 350px;" />
+        <engine:ScrollView name="Selection" style="left: 0; height: 100%; width: 350px;">
+            <engine:Foldout text="Drivers" name="Drivers">
+                <engine:ListView name="DriversList" virtualization-method="DynamicHeight" style="flex-grow: 0;" />
+                <engine:Button text="Add driver" name="AddDriver" />
+            </engine:Foldout>
+            <engine:Foldout text="Volumes" name="Volumes">
+                <engine:ListView name="VolumesList" />
+                <engine:Button text="Add volume" name="AddVolume" />
+            </engine:Foldout>
+        </engine:ScrollView>
         <engine:VisualElement style="flex-grow: 1; width: auto;" />
         <engine:ScrollView name="Detail" enabled="true" style="right: 0; align-self: auto; justify-content: flex-start; align-items: stretch; align-content: flex-start; width: 350px; flex-grow: 0; height: 100%;" />
     </engine:VisualElement>
