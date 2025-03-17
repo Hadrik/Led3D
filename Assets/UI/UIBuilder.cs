@@ -2,7 +2,7 @@
 
 namespace UI
 {
-    public class UIBuilder
+    public static class UIBuilder
     {
         public static VisualElement Build(IUIProvider target)
         {

@@ -5,6 +5,7 @@ using Tools;
 using UI.ControlElementDescriptors;
 using UnityEngine;
 using Volumes;
+using Volumes.Interfaces;
 
 namespace Leds
 {
@@ -28,19 +29,17 @@ namespace Leds
         protected List<Pixel> _pixels = new();
         public IReadOnlyList<Pixel> Pixels => _pixels.AsReadOnly();
         public abstract int PixelCount { get; set; }
-
-        public Transform Transform { get; set; }
         
-        private BaseVolume _currentBaseVolume;
-        public BaseVolume CurrentBaseVolume
+        private IVolume _currentVolume;
+        public IVolume CurrentVolume
         {
-            get => _currentBaseVolume;
+            get => _currentVolume;
             set
             {
-                _currentBaseVolume = value;
+                _currentVolume = value;
                 foreach (var pixel in Pixels)
                 {
-                    pixel.BaseVolume = _currentBaseVolume;
+                    pixel.Volume = _currentVolume;
                 }
             }
         }
@@ -93,6 +92,12 @@ namespace Leds
                 "Visualize",
                 () => Visualize,
                 b => Visualize = b);
+
+            yield return new VolumeDropdownCD(
+                "Volume",
+                () => CurrentVolume,
+                (v) => CurrentVolume = v
+            );
 
             yield return new SliderCD(
                 "Pixel Count",

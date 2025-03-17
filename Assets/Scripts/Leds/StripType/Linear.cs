@@ -51,7 +51,7 @@ namespace Leds.StripType
                 // add
                 for (var i = 0; i < diff; i++)
                 {
-                    _pixels.Add(new Pixel(_pixels.Count, CurrentBaseVolume, transform, Visualize));
+                    _pixels.Add(new Pixel(_pixels.Count, CurrentVolume, transform, Visualize));
                 }
             }
             

@@ -1,7 +1,7 @@
 ﻿using System;
 using UI;
 using UnityEngine;
-using Volumes;
+using Volumes.Interfaces;
 
 namespace Leds.Interfaces
 {
@@ -11,7 +11,7 @@ namespace Leds.Interfaces
         Color Color { get; }
         Vector3 Position { get; }
         bool Visualize { get; }
-        BaseVolume BaseVolume { get; }
+        IVolume Volume { get; }
         
         // Events
         event Action<Color> ColorChanged;

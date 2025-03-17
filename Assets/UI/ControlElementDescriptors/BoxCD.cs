@@ -35,7 +35,7 @@ namespace UI.ControlElementDescriptors
             {
                 var descriptor = _descriptors[i];
                 var child = descriptor.CreateElement(onValueChanged);
-                child.style.flexGrow = _flexGrow.Length > i ? _flexGrow[i] : 1;
+                child.style.flexGrow = _flexGrow?.Length > i ? _flexGrow[i] : 1;
                 _childElements.Add(descriptor, child);
                 elem.Add(child);
             }

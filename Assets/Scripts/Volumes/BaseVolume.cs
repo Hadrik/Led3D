@@ -42,9 +42,9 @@ namespace Volumes
 
         public bool Contains(Vector3 localPosition)
         {
-            return Mathf.Abs(localPosition.x) < transform.localScale.x &&
-                   Mathf.Abs(localPosition.y) < transform.localScale.y &&
-                   Mathf.Abs(localPosition.z) < transform.localScale.z;
+            return Mathf.Abs(localPosition.x) < transform.localScale.x / 2 &&
+                   Mathf.Abs(localPosition.y) < transform.localScale.y / 2 &&
+                   Mathf.Abs(localPosition.z) < transform.localScale.z / 2;
         }
 
         public bool ContainsW(Vector3 worldPosition)
@@ -66,8 +66,10 @@ namespace Volumes
 
         protected Vector3 Normalized(Vector3 localPosition)
         {
-            return new Vector3(localPosition.x / transform.localScale.x, localPosition.y / transform.localScale.y,
-                localPosition.z / transform.localScale.z);
+            return new Vector3(
+                (localPosition.x / transform.localScale.x) + 0.5f,
+                (localPosition.y / transform.localScale.y) + 0.5f,
+                (localPosition.z / transform.localScale.z) + 0.5f);
         }
 
         protected Vector3 NormalizedW(Vector3 worldPosition)

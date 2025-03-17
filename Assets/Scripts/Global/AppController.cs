@@ -59,7 +59,7 @@ namespace Global
         {
             var pf = Resources.Load<GameObject>("Prefabs/VolumeController");
             var obj = Instantiate(pf, new Vector3(0, 0, 0), Quaternion.identity, transform);
-            obj.name = $"VolumeController_{_volumes.Count}";
+            obj.name = $"Volume_{_volumes.Count}";
             var d = (BaseVolume)obj.AddComponent(volumeType);
             _volumes.Add(d);
             VolumeAdded?.Invoke();

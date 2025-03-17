@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using UI.ControlElementDescriptors;
 using UnityEngine;
 
 namespace Volumes.VolumeType
@@ -25,6 +27,19 @@ namespace Volumes.VolumeType
             
             // Interpolate color
             return Color.Lerp(StartColor, EndColor, t);
+        }
+
+        public override IEnumerable<IControlDescriptor> GetUIControls()
+        {
+            foreach (var controlDescriptor in base.GetUIControls()) yield return controlDescriptor;
+
+            yield return new TransformCD(
+                "Bounds",
+                () => transform,
+                (p) => transform.position = p,
+                (r) => transform.rotation = Quaternion.Euler(r),
+                (s) => transform.localScale = s
+            );
         }
     }
 }

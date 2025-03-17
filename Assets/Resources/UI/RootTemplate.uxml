@@ -3,11 +3,11 @@
     <engine:VisualElement style="flex-grow: 1; flex-direction: row; height: 100%;">
         <engine:ScrollView name="Selection" style="left: 0; height: 100%; width: 350px;">
             <engine:Foldout text="Drivers" name="Drivers">
-                <engine:ListView name="DriversList" virtualization-method="DynamicHeight" style="flex-grow: 0;" />
+                <engine:ListView name="DriversList" virtualization-method="DynamicHeight" />
                 <engine:Button text="Add driver" name="AddDriver" />
             </engine:Foldout>
             <engine:Foldout text="Volumes" name="Volumes">
-                <engine:ListView name="VolumesList" />
+                <engine:ListView name="VolumesList" virtualization-method="DynamicHeight" />
                 <engine:Button text="Add volume" name="AddVolume" />
             </engine:Foldout>
         </engine:ScrollView>
