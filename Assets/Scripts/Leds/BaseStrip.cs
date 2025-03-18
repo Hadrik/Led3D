@@ -29,8 +29,9 @@ namespace Leds
         protected List<Pixel> _pixels = new();
         public IReadOnlyList<Pixel> Pixels => _pixels.AsReadOnly();
         public abstract int PixelCount { get; set; }
-        
+
         private IVolume _currentVolume;
+
         public IVolume CurrentVolume
         {
             get => _currentVolume;
@@ -44,8 +45,8 @@ namespace Leds
             }
         }
 
-        [SerializeField, SerializeProperty]
-        private bool visualize;
+        [SerializeField, SerializeProperty] private bool visualize;
+
         public bool Visualize
         {
             get => visualize;
@@ -56,10 +57,11 @@ namespace Leds
                 {
                     pixel.Visualize = visualize;
                 }
+
                 VisualizationChanged?.Invoke();
             }
         }
-        
+
 
         public void SetPixelPrefab(GameObject prefab)
         {
@@ -68,7 +70,7 @@ namespace Leds
                 pixel.SetPrefab(prefab, transform);
             }
         }
-        
+
         protected virtual void Update()
         {
             foreach (var pixel in _pixels)
@@ -76,13 +78,14 @@ namespace Leds
                 pixel.Update();
             }
         }
-        
+
         public virtual void Destroy()
         {
             foreach (var pixel in _pixels)
             {
                 pixel.Destroy();
             }
+
             Destroy(gameObject);
         }
 
@@ -102,7 +105,10 @@ namespace Leds
             yield return new SliderCD(
                 "Pixel Count",
                 () => PixelCount,
-                i => PixelCount = i);
+                i => PixelCount = i,
+                0,
+                100
+            );
         }
     }
 }

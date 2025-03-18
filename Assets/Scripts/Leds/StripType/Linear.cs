@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using UI.ControlElementDescriptors;
 using UnityEngine;
 
 namespace Leds.StripType
@@ -77,6 +79,23 @@ namespace Leds.StripType
         {
             Gizmos.color = Color.red;
             Gizmos.DrawLine(_startHandle.transform.position, _endHandle.transform.position);
+        }
+
+        public override IEnumerable<IControlDescriptor> GetUIControls()
+        {
+            foreach (var controlDescriptor in base.GetUIControls()) yield return controlDescriptor;
+
+            yield return new Vector3CD(
+                "Start",
+                () => _startHandle.transform.position,
+                v => _startHandle.transform.position = v
+            );
+
+            yield return new Vector3CD(
+                "End",
+                () => _endHandle.transform.position,
+                v => _endHandle.transform.position = v
+            );
         }
     }
 }

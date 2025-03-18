@@ -18,6 +18,7 @@ namespace UI.ControlElementDescriptors
         public VisualElement CreateElement(Action onValueChanged)
         {
             var elem = new VisualElement();
+            elem.style.height = new Length(20, LengthUnit.Pixel);
             elem.style.backgroundColor = _getter();
 
             return elem;
