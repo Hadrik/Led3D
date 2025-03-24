@@ -2,6 +2,15 @@
   "version": 3,
   "targets": {
     "net9.0": {
+      "ColorHelper/1.8.1": {
+        "type": "package",
+        "compile": {
+          "lib/netstandard2.0/ColorHelper.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard2.0/ColorHelper.dll": {}
+        }
+      },
       "Microsoft.AspNetCore.OpenApi/9.0.3": {
         "type": "package",
         "dependencies": {
@@ -127,6 +136,19 @@
     }
   },
   "libraries": {
+    "ColorHelper/1.8.1": {
+      "sha512": "rblWXd/02TfwJjX53xEfQnbnDRKxCm09VtavV8JaIcmIFWt9efNf6xTQ3WeXgy/she5R31eRTtnizFoUoDrs5w==",
+      "type": "package",
+      "path": "colorhelper/1.8.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "colorhelper.1.8.1.nupkg.sha512",
+        "colorhelper.nuspec",
+        "lib/netstandard2.0/ColorHelper.dll",
+        "logo.jpg"
+      ]
+    },
     "Microsoft.AspNetCore.OpenApi/9.0.3": {
       "sha512": "fKh0UyGMUE+lhbovMhh3g88b9bT+y2jfZIuJ8ljY7rcCaSJ9m2Qqqbh66oULFfzWE2BUAmimzTGcPcq3jXi/Ew==",
       "type": "package",
@@ -493,6 +515,7 @@
   },
   "projectFileDependencyGroups": {
     "net9.0": [
+      "ColorHelper >= 1.8.1",
       "Microsoft.AspNetCore.OpenApi >= 9.0.3",
       "NLog >= 5.4.0",
       "Swashbuckle.AspNetCore >= 8.0.0"
@@ -541,6 +564,10 @@
       "net9.0": {
         "targetAlias": "net9.0",
         "dependencies": {
+          "ColorHelper": {
+            "target": "Package",
+            "version": "[1.8.1, )"
+          },
           "Microsoft.AspNetCore.OpenApi": {
             "target": "Package",
             "version": "[9.0.3, )"

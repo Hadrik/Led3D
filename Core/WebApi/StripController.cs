@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using Led3D_2.Core;
+﻿using Led3D_2.Core;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Led3D_2.WebApi;

@@ -12,7 +12,7 @@ public class DriverController : ControllerBase
     [HttpGet("driverIds")]
     public ActionResult<List<string>> GetDriverIds()
     {
-        return _mainController.Drivers.Select(d => d.Id).ToList();
+        return Ok(_mainController.Drivers.Select(d => d.Id).ToList());
     }
     
     [HttpGet("{driverId}/commands")]
@@ -24,7 +24,7 @@ public class DriverController : ControllerBase
             return NotFound("Driver not found");
         }
         
-        return driver.GetAvailableCommands();
+        return Ok(driver.GetAvailableCommands());
     }
     
     [HttpPost("{driverId}/commands/{command}")]

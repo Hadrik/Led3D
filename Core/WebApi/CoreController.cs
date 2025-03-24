@@ -8,6 +8,23 @@ namespace Led3D_2.WebApi;
 public class CoreController : ControllerBase
 {
     private readonly MainController _mainController = MainController.Instance;
+
+    [HttpGet("tree")]
+    public ActionResult<object> GetSystemTree()
+    {
+        var tree = new
+        {
+            drivers = _mainController.Drivers.Select(d => new
+            {
+                Id = d.Id,
+                Strips = d.Strips.Select(s => new
+                {
+                    Id = s.Id
+                }).ToList()
+            }).ToList()
+        };
+        return Ok(tree);
+    }
     
     [HttpGet("commands")]
     public ActionResult<List<string>> GetAvailableCommands()

@@ -4,7 +4,7 @@ using NLog;
 
 namespace Led3D_2.Core.Strip.PixelLayouts;
 
-public class Linear : IStripPixelLayout, ISettingsProvider
+public class Linear : IStripPixelLayout
 {
     private class MySettings
     {
