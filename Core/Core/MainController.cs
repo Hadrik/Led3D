@@ -11,7 +11,7 @@ public class MainController : Singleton<MainController>, ICommandProvider
 
     private readonly CommandProvider _commandProvider = new();
     public List<string> GetAvailableCommands() => _commandProvider.GetAvailableCommands();
-    public object ExecuteCommand(string command) => _commandProvider.ExecuteCommand(command);
+    public object? ExecuteCommand(string command) => _commandProvider.ExecuteCommand(command);
     
     public MainController()
     {

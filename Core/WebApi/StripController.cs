@@ -38,4 +38,30 @@ public class StripController : ControllerBase
         
         return strip.GetAvailableSettings();
     }
+    
+    [HttpPost("{stripId}/settings/{setting}")]
+    public ActionResult<object> SetStripSetting(string driverId, string stripId, string setting, [FromBody] object value)
+    {
+        var driver = _mainController.Drivers.FirstOrDefault(d => d.Id == driverId);
+        if (driver == null)
+        {
+            return NotFound("Driver not found");
+        }
+        
+        var strip = driver.Strips.FirstOrDefault(s => s.Id == stripId);
+        if (strip == null)
+        {
+            return NotFound("Strip not found");
+        }
+        
+        try
+        {
+            strip.UpdateSetting(setting, value);
+            return Ok();
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
+    }
 }

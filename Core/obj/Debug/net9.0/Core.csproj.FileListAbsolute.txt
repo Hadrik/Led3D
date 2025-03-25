@@ -21,3 +21,5 @@ C:\Users\trric\Documents\Projects\Led3D-2\Core\obj\Debug\net9.0\refint\Core.dll
 C:\Users\trric\Documents\Projects\Led3D-2\Core\obj\Debug\net9.0\Core.pdb
 C:\Users\trric\Documents\Projects\Led3D-2\Core\obj\Debug\net9.0\Core.genruntimeconfig.cache
 C:\Users\trric\Documents\Projects\Led3D-2\Core\obj\Debug\net9.0\ref\Core.dll
+C:\Users\trric\Documents\Projects\Led3D-2\Core\bin\Debug\net9.0\ColorHelper.dll
+C:\Users\trric\Documents\Projects\Led3D-2\Core\bin\Debug\net9.0\Newtonsoft.Json.dll
