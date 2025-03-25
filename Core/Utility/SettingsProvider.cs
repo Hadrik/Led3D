@@ -4,28 +4,18 @@ using NLog;
 
 namespace Led3D_2.Utility;
 
+/// <summary>
+/// Any class that stores settings accessible from the API has to implement this interface
+/// </summary>
 public interface ISettingsProvider
 {
-    Dictionary<string, string> GetAvailableSettings();
-    Dictionary<string, object> GetSettings();
-    void UpdateSettings(Dictionary<string, object> newSettings);
-    void UpdateSetting(string key, object newValue);
-}
-
-public class SettingsProvider<T>(T settings) : ISettingsProvider
-    where T : class, new()
-{
-    private static readonly Logger Log = LogManager.GetCurrentClassLogger();
-    
-    private readonly Dictionary<PropertyInfo, Delegate> _changeHandlers = new();
-    
     /// <summary>
     /// Get types of all settings
     /// </summary>
     /// <returns>
     /// Dictionary (setting name, setting type)
     /// </returns>
-    public Dictionary<string, string> GetAvailableSettings() => settings.AsTypeDictionary();
+    Dictionary<string, string> GetAvailableSettings();
     
     /// <summary>
     /// Get values of all settings
@@ -33,7 +23,7 @@ public class SettingsProvider<T>(T settings) : ISettingsProvider
     /// <returns>
     /// Dictionary (setting name, setting value)
     /// </returns>
-    public Dictionary<string, object> GetSettings() => settings.AsDictionary();
+    Dictionary<string, object> GetSettings();
     
     /// <summary>
     /// Update settings with new values
@@ -41,13 +31,7 @@ public class SettingsProvider<T>(T settings) : ISettingsProvider
     /// <param name="newSettings">
     /// Dictionary (setting name, new setting value)
     /// </param>
-    public void UpdateSettings(Dictionary<string, object> newSettings)
-    {
-        foreach (var (key, value) in newSettings)
-        {
-            UpdateSetting(key, value);
-        }
-    }
+    void UpdateSettings(Dictionary<string, object> newSettings);
     
     /// <summary>
     /// Update a single setting with a new value
@@ -58,10 +42,51 @@ public class SettingsProvider<T>(T settings) : ISettingsProvider
     /// <param name="newValue">
     /// New setting value
     /// </param>
+    /// <exception cref="NullReferenceException">
+    /// property not found
+    /// </exception>
+    /// <exception cref="IncorrectTypeException">
+    /// newValue has incorrect type
+    /// </exception>
+    void UpdateSetting(string key, object newValue);
+}
+
+/// <summary>
+/// Helper class to manage settings of a class
+/// </summary>
+/// <param name="settings">
+/// Instance of the settings class
+/// </param>
+/// <typeparam name="T">
+/// Class implementing the settings.
+/// All properties of the class will be considered a setting
+/// </typeparam>
+public class SettingsProvider<T>(T settings) : ISettingsProvider
+    where T : class, new()
+{
+    private static readonly Logger Log = LogManager.GetCurrentClassLogger();
+    
+    private readonly Dictionary<PropertyInfo, Delegate> _changeHandlers = new();
+    
+    
+    public Dictionary<string, string> GetAvailableSettings() => settings.AsTypeDictionary();
+    
+    public Dictionary<string, object> GetSettings() => settings.AsDictionary();
+    
+    public void UpdateSettings(Dictionary<string, object> newSettings)
+    {
+        foreach (var (key, value) in newSettings)
+        {
+            UpdateSetting(key, value);
+        }
+    }
+    
     public void UpdateSetting(string key, object newValue)
     {
         var property = settings.GetProperty(key);
-        if (!Verifier.VerifyProperty(property, key, newValue)) return;
+        
+        // Throws if property not found or incorrect type
+        VerifyProperty(property, key, newValue);
         
         var oldValue = property!.GetValue(settings);
 
@@ -91,6 +116,9 @@ public class SettingsProvider<T>(T settings) : ISettingsProvider
     /// <param name="handler">
     /// Action to call when the property changes (oldValue, newValue)
     /// </param>
+    /// <exception cref="ArgumentException">
+    /// Invalid expression
+    /// </exception>
     public void RegisterChangeHandler<TProp>(Expression<Func<T, TProp>> propertySelector, Action<TProp, TProp> handler)
     {
         var propertyName = GetPropertyName(propertySelector);
@@ -103,6 +131,21 @@ public class SettingsProvider<T>(T settings) : ISettingsProvider
         _changeHandlers[property] = handler;
     }
     
+    /// <summary>
+    /// Get the name of the property from the expression
+    /// </summary>
+    /// <param name="expression">
+    /// (s => s.Property)
+    /// </param>
+    /// <typeparam name="TProp">
+    /// Type of the property
+    /// </typeparam>
+    /// <returns>
+    /// Property name
+    /// </returns>
+    /// <exception cref="ArgumentException">
+    /// Invalid expression
+    /// </exception>
     private static string GetPropertyName<TProp>(Expression<Func<T, TProp>> expression)
     {
         if (expression.Body is MemberExpression memberExpression)
@@ -110,7 +153,7 @@ public class SettingsProvider<T>(T settings) : ISettingsProvider
             return memberExpression.Member.Name;
         }
         Log.Error("Expression is not a member access - {name}", nameof(expression));
-        return "";
+        throw new ArgumentException("Expression is not a member access - {name}", nameof(expression));
     }
     
     /// <summary>
@@ -145,4 +188,38 @@ public class SettingsProvider<T>(T settings) : ISettingsProvider
             return null;
         }
     }
+    
+    /// <summary>
+    /// Verify that the property exists and the value has the correct type
+    /// </summary>
+    /// <param name="prop">
+    /// Property to verify
+    /// </param>
+    /// <param name="key">
+    /// Property name (for logging)
+    /// </param>
+    /// <param name="value">
+    /// Value to verify
+    /// </param>
+    /// <exception cref="NullReferenceException">
+    /// Property not found
+    /// </exception>
+    /// <exception cref="IncorrectTypeException">
+    /// Incorrect property type
+    /// </exception>
+    private static void VerifyProperty(PropertyInfo? prop, string key, object value)
+    {
+        if (prop is null)
+        {
+            Log.Warn("Tried to update unknown setting {0}", key);
+            throw new NullReferenceException("Property not found");
+        }
+        if (prop.GetType() != value.GetType())
+        {
+            Log.Warn($"Tried to update '{key}' with value of type '{value.GetType().Name}' instead of '{prop.GetType().Name}'");
+            throw new IncorrectTypeException("Incorrect property type");
+        }
+    }
+    
 }
+public class IncorrectTypeException(string message) : Exception(message);

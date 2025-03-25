@@ -6,6 +6,7 @@ namespace Led3D_2.Core.Strip.PixelLayouts;
 
 public class Linear : IStripPixelLayout
 {
+    private static readonly Logger Log = LogManager.GetCurrentClassLogger();
     private class MySettings
     {
         public int Length { get; set; } = 0;
@@ -13,35 +14,23 @@ public class Linear : IStripPixelLayout
         public Vector3 EndPosition { get; set; } = new(-1, -1, -1);
     }
     private readonly MySettings _settings = new();
-    
-    public Dictionary<string, object> GetSettings() => _settings.AsDictionary();
-    public Dictionary<string, string> GetAvailableSettings() => _settings.AsTypeDictionary();
-    
-    private static readonly Logger Log = LogManager.GetCurrentClassLogger();
+    private readonly SettingsProvider<MySettings> _settingsProvider;
 
     public event Action<List<Vector3>>? PixelPositionsChanged;
-
-    public void UpdateSettings(Dictionary<string, object> newSettings)
-    {
-        foreach (var (key, value) in newSettings)
-        {
-            UpdateSetting(key, value);
-        }
-    }
     
-    public void UpdateSetting(string key, object newValue)
+    public Linear()
     {
-        var property = _settings.GetProperty(key);
-        if (!Verifier.VerifyProperty(property, key, newValue)) return;
-        
-        _settings.SetProperty(property!, newValue);
-        
-        // if (key is "Length" or "Start Position" or "End Position")
-        // {
-            UpdatePixelPositions();
-        // }
+        _settingsProvider = new SettingsProvider<MySettings>(_settings);
+        _settingsProvider.RegisterChangeHandler(s => s.Length, (o, n) => UpdatePixelPositions());
+        _settingsProvider.RegisterChangeHandler(s => s.StartPosition, (o, n) => UpdatePixelPositions());
+        _settingsProvider.RegisterChangeHandler(s => s.EndPosition, (o, n) => UpdatePixelPositions());
     }
 
+    public Dictionary<string, object> GetSettings() => _settingsProvider.GetSettings();
+    public Dictionary<string, string> GetAvailableSettings() => _settingsProvider.GetAvailableSettings();
+    public void UpdateSettings(Dictionary<string, object> newSettings) => _settingsProvider.UpdateSettings(newSettings);
+    public void UpdateSetting(string key, object newValue) => _settingsProvider.UpdateSetting(key, newValue);
+    
     private void UpdatePixelPositions()
     {
         var positions = new List<Vector3>(_settings.Length);

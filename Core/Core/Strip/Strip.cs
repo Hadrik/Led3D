@@ -1,4 +1,6 @@
 ﻿using System.Numerics;
+using ColorHelper;
+using Led3D_2.Core.Volume;
 using Led3D_2.Utility;
 
 namespace Led3D_2.Core.Strip;
@@ -13,6 +15,7 @@ public class Strip : ISettingsProvider
     private class MySettings
     {
         public IStripPixelLayout? Layout { get; set; } = null;
+        public IVolumeType? Volume { get; set; } = null;
     }
     private readonly MySettings _settings = new();
     private readonly SettingsProvider<MySettings> _settingsProvider;
@@ -27,6 +30,12 @@ public class Strip : ISettingsProvider
     public Dictionary<string, object> GetSettings() => _settingsProvider.GetSettings();
     public void UpdateSettings(Dictionary<string, object> newSettings) => _settingsProvider.UpdateSettings(newSettings);
     public void UpdateSetting(string key, object newValue) => _settingsProvider.UpdateSetting(key, newValue);
+    
+    public List<HSV>? GetColors()
+    {
+        if (_settings.Volume == null) return null;
+        return _pixels.Select(p => _settings.Volume.GetColorAt(p.Position)).ToList();
+    }
 
     private void OnLayoutChange(IStripPixelLayout? oldLayout, IStripPixelLayout? newLayout)
     {

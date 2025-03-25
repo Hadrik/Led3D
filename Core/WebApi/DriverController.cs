@@ -1,4 +1,5 @@
 ﻿using Led3D_2.Core;
+using Led3D_2.Utility;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Led3D_2.WebApi;
@@ -30,13 +31,19 @@ public class DriverController : ControllerBase
     [HttpPost("{driverId}/commands/{command}")]
     public ActionResult<object> ExecuteDriverCommand(string driverId, string command)
     {
-        var driver = _mainController.Drivers.FirstOrDefault(d => d.Id == driverId);
-        if (driver == null)
+        if (_mainController.Drivers.FirstOrDefault(d => d.Id == driverId) is not ICommandProvider driver)
         {
             return NotFound("Driver not found");
         }
-        
-        var result = driver.ExecuteCommand(command);
-        return Ok(result);
+
+        try
+        {
+            var result = driver.ExecuteCommand(command);
+            return Ok(result);
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
     }
 }

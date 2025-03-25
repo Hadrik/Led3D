@@ -4,7 +4,7 @@ using Led3D_2.Utility;
 
 namespace Led3D_2.Core.Volume.VolumeTypes;
 
-public class Gradient : IVolumeType, ISettingsProvider
+public class Gradient : IVolumeType
 {
     private class MySettings
     {
