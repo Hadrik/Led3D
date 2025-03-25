@@ -1,8 +1,10 @@
-﻿using System.Linq.Expressions;
+﻿using System.Dynamic;
 using System.Reflection;
 using NLog;
 
 namespace Led3D_2.Utility;
+
+// TODO: Fix outdated comments
 
 /// <summary>
 /// Any class that stores settings accessible from the API has to implement this interface
@@ -13,9 +15,19 @@ public interface ISettingsProvider
     /// Get types of all settings
     /// </summary>
     /// <returns>
-    /// Dictionary (setting name, setting type)
+    /// <code>
+    /// [
+    ///     {
+    ///         Name: "settingName",
+    ///         Type: "settingType",
+    ///         Subsettings: [
+    ///             {...}
+    ///         ]
+    ///     }, ...
+    /// ]
+    /// </code>
     /// </returns>
-    Dictionary<string, string> GetAvailableSettings();
+    List<IDictionary<string, object?>> GetAvailableSettings();
     
     /// <summary>
     /// Get values of all settings
@@ -44,9 +56,6 @@ public interface ISettingsProvider
     /// </param>
     /// <exception cref="NullReferenceException">
     /// property not found
-    /// </exception>
-    /// <exception cref="IncorrectTypeException">
-    /// newValue has incorrect type
     /// </exception>
     void UpdateSetting(string key, object newValue);
 }
@@ -100,16 +109,30 @@ public class SettingsProvider : ISettingsProvider
         );
     }
 
-    public Dictionary<string, string> GetAvailableSettings()
+    public List<IDictionary<string, object?>> GetAvailableSettings()
     {
-        var result = new Dictionary<string, string>();
+        var result = new List<IDictionary<string, object?>>();
         foreach (var property in GetSettingProperties())
         {
             dynamic? setting = property.GetValue(this);
-            if (setting != null)
+            if (setting == null) continue;
+            
+            dynamic repr = new ExpandoObject();
+            repr.Name = setting.Name;
+            repr.FriendlyName = setting.FriendlyName;
+            repr.Description = setting.Description;
+            repr.Type = setting.Type.Name;
+
+            if (typeof(ISettingsProvider).IsAssignableFrom(setting.Type))
             {
-                result[setting.Name] = setting.Type.Name;
+                repr.Value = setting.Value?.GetAvailableSettings();
             }
+            else
+            {
+                repr.Value = setting.Value;
+            }
+                
+            result.Add((IDictionary<string, object?>)repr);
         }
         return result;
     }
@@ -146,10 +169,27 @@ public class SettingsProvider : ISettingsProvider
             {
                 var oldValue = setting.Value;
                 var valueType = setting.Type;
-                if (valueType.IsInterface && newValue is string)
+                if (valueType.IsInterface)
                 {
-                    var instance = InstantiateImplementation(valueType, (string)newValue);
-                    setting.Value = instance;
+                    if (newValue is string)
+                    {
+                        var objInstance = InstantiateImplementation(valueType, (string)newValue);
+                        if (objInstance != null)
+                        {
+                            setting.Value = objInstance;
+                        }
+                        else
+                        {
+                            Log.Warn("Failed to instantiate implementation {name} for interface {interface}", 
+                                (string)newValue, valueType.Name);
+                            throw new ArgumentException($"Failed to instantiate implementation {(string)newValue}");
+                        }
+                    }
+                    else
+                    {
+                        Log.Warn("Setting is an interface, but new value is not a string");
+                        throw new ArgumentException("Setting is an interface, but new value is not a string");
+                    }
                 }
                 else
                 {

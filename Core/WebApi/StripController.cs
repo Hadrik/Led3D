@@ -1,4 +1,5 @@
-﻿using Led3D_2.Core;
+﻿using System.Text.Json;
+using Led3D_2.Core;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Led3D_2.WebApi;
@@ -22,7 +23,7 @@ public class StripController : ControllerBase
     }
     
     [HttpGet("{stripId}/settings")]
-    public ActionResult<Dictionary<string, string>> GetStripCommands(string driverId, string stripId)
+    public ActionResult<List<IDictionary<string, object?>>> GetStripCommands(string driverId, string stripId)
     {
         var driver = _mainController.Drivers.FirstOrDefault(d => d.Id == driverId);
         if (driver == null)
@@ -40,7 +41,7 @@ public class StripController : ControllerBase
     }
     
     [HttpPost("{stripId}/settings/{setting}")]
-    public ActionResult<object> SetStripSetting(string driverId, string stripId, string setting, [FromBody] object value)
+    public ActionResult<object> SetStripSetting(string driverId, string stripId, string setting, [FromBody] JsonElement valueElement)
     {
         var driver = _mainController.Drivers.FirstOrDefault(d => d.Id == driverId);
         if (driver == null)
@@ -56,6 +57,15 @@ public class StripController : ControllerBase
         
         try
         {
+            var value = valueElement.ValueKind switch
+            {
+                JsonValueKind.String => valueElement.GetString()!,
+                JsonValueKind.Number => valueElement.TryGetInt32(out var intVal) ? intVal : valueElement.GetDouble(),
+                JsonValueKind.True => true,
+                JsonValueKind.False => false,
+                JsonValueKind.Null => null!,
+                _ => JsonSerializer.Deserialize<object>(valueElement.GetRawText())!
+            };
             strip.UpdateSetting(setting, value);
             return Ok();
         }

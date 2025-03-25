@@ -7,7 +7,7 @@ namespace Led3D_2.Communication.CommTargets;
 
 public class WebSocket : ICommTarget
 {
-    public Dictionary<string, string> GetAvailableSettings()
+    public List<IDictionary<string, object?>> GetAvailableSettings()
     {
         throw new NotImplementedException();
     }

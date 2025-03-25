@@ -16,7 +16,7 @@ public class VolumeController : ControllerBase
     }
 
     [HttpGet("{volumeId}/settings")]
-    public ActionResult GetVolumeSettings(string volumeId)
+    public ActionResult<List<object>> GetVolumeSettings(string volumeId)
     {
         var volume = _mainController.Volumes.FirstOrDefault(v => v.Id == volumeId);
         if (volume == null)

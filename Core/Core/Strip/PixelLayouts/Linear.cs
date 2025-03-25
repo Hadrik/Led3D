@@ -39,7 +39,7 @@ public class Linear : IStripPixelLayout
     }
 
     public Dictionary<string, object> GetSettingValues() => _settings.GetSettingValues();
-    public Dictionary<string, string> GetAvailableSettings() => _settings.GetAvailableSettings();
+    public List<IDictionary<string, object?>> GetAvailableSettings() => _settings.GetAvailableSettings();
     public void UpdateSettings(Dictionary<string, object> newSettings) => _settings.UpdateSettings(newSettings);
     public void UpdateSetting(string key, object newValue) => _settings.UpdateSetting(key, newValue);
     

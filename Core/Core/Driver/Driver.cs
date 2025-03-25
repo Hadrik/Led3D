@@ -33,7 +33,7 @@ public class Driver : ICommandProvider, ISettingsProvider
     
     public List<string> GetAvailableCommands() => _commandProvider.GetAvailableCommands();
     public object? ExecuteCommand(string command) => _commandProvider.ExecuteCommand(command);
-    public Dictionary<string, string> GetAvailableSettings() => _settings.GetAvailableSettings();
+    public List<IDictionary<string, object?>> GetAvailableSettings() => _settings.GetAvailableSettings();
     public Dictionary<string, object> GetSettingValues() => _settings.GetSettingValues();
     public void UpdateSettings(Dictionary<string, object> newSettings) => _settings.UpdateSettings(newSettings);
     public void UpdateSetting(string key, object newValue) => _settings.UpdateSetting(key, newValue);
