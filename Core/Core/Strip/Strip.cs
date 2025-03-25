@@ -12,29 +12,36 @@ public class Strip : ISettingsProvider
     private readonly List<Pixel.Pixel> _pixels = [];
     public IReadOnlyList<Pixel.Pixel> Pixels => _pixels;
 
-    private class MySettings
+    private class MySettings : SettingsProvider
     {
-        public IStripPixelLayout? Layout { get; set; } = null;
-        public IVolumeType? Volume { get; set; } = null;
+        public Setting<IStripPixelLayout?> Layout { get; } = new()
+        {
+            Name = "Layout",
+            DefaultValue = null
+        };
+        
+        public Setting<IVolumeType?> Volume { get; } = new()
+        {
+            Name = "Volume",
+            DefaultValue = null
+        };
     }
     private readonly MySettings _settings = new();
-    private readonly SettingsProvider<MySettings> _settingsProvider;
     
     public Strip()
     {
-        _settingsProvider = new SettingsProvider<MySettings>(_settings);
-        _settingsProvider.RegisterChangeHandler(s => s.Layout, OnLayoutChange);
+        _settings.RegisterChangeHandler(_settings.Layout, OnLayoutChange);
     }
 
-    public Dictionary<string, string> GetAvailableSettings() => _settingsProvider.GetAvailableSettings();
-    public Dictionary<string, object> GetSettings() => _settingsProvider.GetSettings();
-    public void UpdateSettings(Dictionary<string, object> newSettings) => _settingsProvider.UpdateSettings(newSettings);
-    public void UpdateSetting(string key, object newValue) => _settingsProvider.UpdateSetting(key, newValue);
+    public Dictionary<string, string> GetAvailableSettings() => _settings.GetAvailableSettings();
+    public Dictionary<string, object> GetSettingValues() => _settings.GetSettingValues();
+    public void UpdateSettings(Dictionary<string, object> newSettings) => _settings.UpdateSettings(newSettings);
+    public void UpdateSetting(string key, object newValue) => _settings.UpdateSetting(key, newValue);
     
     public List<HSV>? GetColors()
     {
-        if (_settings.Volume == null) return null;
-        return _pixels.Select(p => _settings.Volume.GetColorAt(p.Position)).ToList();
+        if (_settings.Volume.Value == null) return null;
+        return _pixels.Select(p => _settings.Volume.Value.GetColorAt(p.Position)).ToList();
     }
 
     private void OnLayoutChange(IStripPixelLayout? oldLayout, IStripPixelLayout? newLayout)

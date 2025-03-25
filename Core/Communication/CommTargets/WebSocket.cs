@@ -12,7 +12,7 @@ public class WebSocket : ICommTarget
         throw new NotImplementedException();
     }
 
-    public Dictionary<string, object> GetSettings()
+    public Dictionary<string, object> GetSettingValues()
     {
         throw new NotImplementedException();
     }

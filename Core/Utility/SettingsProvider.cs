@@ -23,7 +23,7 @@ public interface ISettingsProvider
     /// <returns>
     /// Dictionary (setting name, setting value)
     /// </returns>
-    Dictionary<string, object> GetSettings();
+    Dictionary<string, object> GetSettingValues();
     
     /// <summary>
     /// Update settings with new values
@@ -51,6 +51,32 @@ public interface ISettingsProvider
     void UpdateSetting(string key, object newValue);
 }
 
+
+public class Setting<T>
+{
+    public string Name { get; init; } = string.Empty;
+    public string? FriendlyName { get; init; }
+    public string? Description { get; init; }
+    
+    private T _value;
+    public T Value
+    {
+        get => _value;
+        set
+        {
+            if (Validate != null && !Validate(value))
+            {
+                throw new ArgumentException("Invalid value");
+            }
+            _value = value;
+        }
+    }
+    public T DefaultValue { init => _value = value; }
+    public Type Type => typeof(T);
+    public Predicate<T>? Validate;
+}
+
+
 /// <summary>
 /// Helper class to manage settings of a class
 /// </summary>
@@ -61,17 +87,47 @@ public interface ISettingsProvider
 /// Class implementing the settings.
 /// All properties of the class will be considered a setting
 /// </typeparam>
-public class SettingsProvider<T>(T settings) : ISettingsProvider
-    where T : class, new()
+public class SettingsProvider : ISettingsProvider
 {
     private static readonly Logger Log = LogManager.GetCurrentClassLogger();
     
-    private readonly Dictionary<PropertyInfo, Delegate> _changeHandlers = new();
-    
-    
-    public Dictionary<string, string> GetAvailableSettings() => settings.AsTypeDictionary();
-    
-    public Dictionary<string, object> GetSettings() => settings.AsDictionary();
+    private readonly Dictionary<string, Delegate> _changeHandlers = new();
+
+    private IEnumerable<PropertyInfo> GetSettingProperties()
+    {
+        return GetType().GetProperties().Where(p => 
+            p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(Setting<>)
+        );
+    }
+
+    public Dictionary<string, string> GetAvailableSettings()
+    {
+        var result = new Dictionary<string, string>();
+        foreach (var property in GetSettingProperties())
+        {
+            dynamic? setting = property.GetValue(this);
+            if (setting != null)
+            {
+                result[setting.Name] = setting.Type.Name;
+            }
+        }
+        return result;
+    }
+
+    public Dictionary<string, object> GetSettingValues()
+    {
+        var result = new Dictionary<string, object>();
+        foreach (var property in GetSettingProperties())
+        {
+            dynamic? setting = property.GetValue(this);
+            if (setting != null)
+            {
+                result[setting.Name] = setting.Value;
+            }
+        }
+
+        return result;
+    }
     
     public void UpdateSettings(Dictionary<string, object> newSettings)
     {
@@ -83,77 +139,43 @@ public class SettingsProvider<T>(T settings) : ISettingsProvider
     
     public void UpdateSetting(string key, object newValue)
     {
-        var property = settings.GetProperty(key);
-        
-        // Throws if property not found or incorrect type
-        VerifyProperty(property, key, newValue);
-        
-        var oldValue = property!.GetValue(settings);
+        foreach (var property in GetSettingProperties())
+        {
+            dynamic? setting = property.GetValue(this);
+            if (setting != null && setting.Name == key)
+            {
+                var oldValue = setting.Value;
+                var valueType = setting.Type;
+                if (valueType.IsInterface && newValue is string)
+                {
+                    var instance = InstantiateImplementation(valueType, (string)newValue);
+                    setting.Value = instance;
+                }
+                else
+                {
+                    setting.Value = newValue;
+                }
 
-        // Is interface?
-        if (property.PropertyType.IsInterface && newValue is string implementationName)
-        {
-            var instance = InstantiateImplementation(property.PropertyType, implementationName);
-            settings.SetProperty(property, instance);
-        }
-        else
-        {
-            settings.SetProperty(property, newValue);
-        }
-
-        if (_changeHandlers.TryGetValue(property, out var handlerDelegate))
-        {
-            handlerDelegate.DynamicInvoke(oldValue, property.GetValue(settings));
+                if (_changeHandlers.TryGetValue(setting.Name, out Delegate? handlerDelegate))
+                {
+                    handlerDelegate?.DynamicInvoke(oldValue, setting.Value);
+                }
+                
+                return;
+            }
         }
     }
     
-    /// <summary>
-    /// Register a callback that gets called when the property changes
-    /// </summary>
-    /// <param name="propertySelector">
-    /// Property to register the change handler for (s => s.Property)
-    /// </param>
-    /// <param name="handler">
-    /// Action to call when the property changes (oldValue, newValue)
-    /// </param>
-    /// <exception cref="ArgumentException">
-    /// Invalid expression
-    /// </exception>
-    public void RegisterChangeHandler<TProp>(Expression<Func<T, TProp>> propertySelector, Action<TProp, TProp> handler)
+    public void RegisterChangeHandler<T>(Setting<T> setting, Action<T, T> handler)
     {
-        var propertyName = GetPropertyName(propertySelector);
-        var property = settings.GetProperty(propertyName);
-        if (property == null)
+        try
         {
-            Log.Warn("Failed to register change handler for {name}: Property not found", propertyName);
-            return;
+            _changeHandlers[setting.Name] = handler;
         }
-        _changeHandlers[property] = handler;
-    }
-    
-    /// <summary>
-    /// Get the name of the property from the expression
-    /// </summary>
-    /// <param name="expression">
-    /// (s => s.Property)
-    /// </param>
-    /// <typeparam name="TProp">
-    /// Type of the property
-    /// </typeparam>
-    /// <returns>
-    /// Property name
-    /// </returns>
-    /// <exception cref="ArgumentException">
-    /// Invalid expression
-    /// </exception>
-    private static string GetPropertyName<TProp>(Expression<Func<T, TProp>> expression)
-    {
-        if (expression.Body is MemberExpression memberExpression)
+        catch (KeyNotFoundException ex)
         {
-            return memberExpression.Member.Name;
+            Log.Warn(ex, "Failed to register change handler for {name}", setting.Name);
         }
-        Log.Error("Expression is not a member access - {name}", nameof(expression));
-        throw new ArgumentException("Expression is not a member access - {name}", nameof(expression));
     }
     
     /// <summary>
@@ -165,8 +187,10 @@ public class SettingsProvider<T>(T settings) : ISettingsProvider
     /// <param name="implementationName">
     /// Name of the class implementing the interface
     /// </param>
-    /// <returns></returns>
-    private object? InstantiateImplementation(Type interfaceType, string implementationName)
+    /// <returns>
+    /// Instance of the specified class
+    /// </returns>
+    private static object? InstantiateImplementation(Type interfaceType, string implementationName)
     {
         try
         {
@@ -188,38 +212,4 @@ public class SettingsProvider<T>(T settings) : ISettingsProvider
             return null;
         }
     }
-    
-    /// <summary>
-    /// Verify that the property exists and the value has the correct type
-    /// </summary>
-    /// <param name="prop">
-    /// Property to verify
-    /// </param>
-    /// <param name="key">
-    /// Property name (for logging)
-    /// </param>
-    /// <param name="value">
-    /// Value to verify
-    /// </param>
-    /// <exception cref="NullReferenceException">
-    /// Property not found
-    /// </exception>
-    /// <exception cref="IncorrectTypeException">
-    /// Incorrect property type
-    /// </exception>
-    private static void VerifyProperty(PropertyInfo? prop, string key, object value)
-    {
-        if (prop is null)
-        {
-            Log.Warn("Tried to update unknown setting {0}", key);
-            throw new NullReferenceException("Property not found");
-        }
-        if (prop.GetType() != value.GetType())
-        {
-            Log.Warn($"Tried to update '{key}' with value of type '{value.GetType().Name}' instead of '{prop.GetType().Name}'");
-            throw new IncorrectTypeException("Incorrect property type");
-        }
-    }
-    
 }
-public class IncorrectTypeException(string message) : Exception(message);

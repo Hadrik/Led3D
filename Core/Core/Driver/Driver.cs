@@ -14,31 +14,38 @@ public class Driver : ICommandProvider, ISettingsProvider
     private readonly List<Strip.Strip> _strips = [];
     public IReadOnlyList<Strip.Strip> Strips => _strips;
 
-    private class MySettings
+    private class MySettings : SettingsProvider
     {
-        public int FrameRate { get; set; } = 30;
-        public ICommTarget? Target { get; set; } = null;
+        public Setting<int> FrameRate { get; } = new()
+        {
+            Name = "FrameRate",
+            DefaultValue = 30
+        };
+        
+        public Setting<ICommTarget?> Target { get; } = new()
+        {
+            Name = "Target",
+            DefaultValue = null
+        };
     }
     private readonly MySettings _settings = new();
-    private readonly SettingsProvider<MySettings> _settingsProvider;
     private readonly CommandProvider _commandProvider = new();
     
     public List<string> GetAvailableCommands() => _commandProvider.GetAvailableCommands();
     public object? ExecuteCommand(string command) => _commandProvider.ExecuteCommand(command);
-    public Dictionary<string, string> GetAvailableSettings() => _settingsProvider.GetAvailableSettings();
-    public Dictionary<string, object> GetSettings() => _settingsProvider.GetSettings();
-    public void UpdateSettings(Dictionary<string, object> newSettings) => _settingsProvider.UpdateSettings(newSettings);
-    public void UpdateSetting(string key, object newValue) => _settingsProvider.UpdateSetting(key, newValue);
+    public Dictionary<string, string> GetAvailableSettings() => _settings.GetAvailableSettings();
+    public Dictionary<string, object> GetSettingValues() => _settings.GetSettingValues();
+    public void UpdateSettings(Dictionary<string, object> newSettings) => _settings.UpdateSettings(newSettings);
+    public void UpdateSetting(string key, object newValue) => _settings.UpdateSetting(key, newValue);
 
     private readonly Timer _timer;
     
     public Driver()
     {
-        _settingsProvider = new SettingsProvider<MySettings>(_settings);
-        _settingsProvider.RegisterChangeHandler(s => s.FrameRate, FramerateChange);
-        _settingsProvider.RegisterChangeHandler(s => s.Target, TargetChange);
+        _settings.RegisterChangeHandler(_settings.FrameRate, FramerateChange);
+        _settings.RegisterChangeHandler(_settings.Target, TargetChange);
         _commandProvider.RegisterCommand("AddStrip", AddStrip);
-        _timer = new Timer((double)1 / _settings.FrameRate);
+        _timer = new Timer((double)1 / _settings.FrameRate.Value);
         _timer.AutoReset = true;
         _timer.Elapsed += Send;
     }
@@ -74,7 +81,7 @@ public class Driver : ICommandProvider, ISettingsProvider
 
     private void Send(object? o, ElapsedEventArgs e)
     {
-        _settings.Target?.Send(GetFrame());
+        _settings.Target.Value?.Send(GetFrame());
     }
     
     private List<List<HSV>> GetFrame()
