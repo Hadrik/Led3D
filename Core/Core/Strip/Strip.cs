@@ -5,6 +5,15 @@ using Led3D_2.Utility;
 
 namespace Led3D_2.Core.Strip;
 
+/// <summary>
+/// Data structure that gets passed to a CommunicationTarget.
+/// </summary>
+public class StripData
+{
+    public required string Id { get; set; }
+    public required List<HSV> Data { get; set; }
+}
+
 public class Strip : ISettingsProvider
 {
     private static int _idCounter = 0;
@@ -19,29 +28,33 @@ public class Strip : ISettingsProvider
             Name = "Layout",
             DefaultValue = null
         };
-        
+
         public Setting<IVolumeType?> Volume { get; } = new()
         {
             Name = "Volume",
             DefaultValue = null
         };
     }
+
     private readonly MySettings _settings = new();
-    
+
     public Strip()
     {
         _settings.RegisterChangeHandler(_settings.Layout, OnLayoutChange);
     }
 
-    public List<IDictionary<string, object?>> GetAvailableSettings() => _settings.GetAvailableSettings();
-    public Dictionary<string, object> GetSettingValues() => _settings.GetSettingValues();
+    public List<IDictionary<string, object?>> GetSettings() => _settings.GetSettings();
     public void UpdateSettings(Dictionary<string, object> newSettings) => _settings.UpdateSettings(newSettings);
     public void UpdateSetting(string key, object newValue) => _settings.UpdateSetting(key, newValue);
-    
-    public List<HSV>? GetColors()
+
+    public StripData? GetColors()
     {
         if (_settings.Volume.Value == null) return null;
-        return _pixels.Select(p => _settings.Volume.Value.GetColorAt(p.Position)).ToList();
+        return new StripData()
+        {
+            Id = Id,
+            Data = _pixels.Select(p => _settings.Volume.Value.GetColorAt(p.Position)).ToList()
+        };
     }
 
     private void OnLayoutChange(IStripPixelLayout? oldLayout, IStripPixelLayout? newLayout)
@@ -49,7 +62,7 @@ public class Strip : ISettingsProvider
         if (oldLayout != null) oldLayout.PixelPositionsChanged -= OnPixelPositionsChanged;
         if (newLayout != null) newLayout.PixelPositionsChanged += OnPixelPositionsChanged;
     }
-    
+
     private void OnPixelPositionsChanged(List<Vector3> positions)
     {
         var diff = _pixels.Count - positions.Count;
@@ -57,7 +70,7 @@ public class Strip : ISettingsProvider
         {
             ChangePixelCount(diff);
         }
-        
+
         for (var i = 0; i < positions.Count; i++)
         {
             _pixels[i].Position = positions[i];

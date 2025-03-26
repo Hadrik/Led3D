@@ -40,8 +40,7 @@ public class Gradient : IVolumeType
     }
     private readonly MySettings _settings = new();
 
-    public List<IDictionary<string, object?>> GetAvailableSettings() => _settings.GetAvailableSettings();
-    public Dictionary<string, object> GetSettingValues() => _settings.GetSettingValues();
+    public List<IDictionary<string, object?>> GetSettings() => _settings.GetSettings();
     public void UpdateSettings(Dictionary<string, object> newSettings) => _settings.UpdateSettings(newSettings);
     public void UpdateSetting(string key, object newValue) => _settings.UpdateSetting(key, newValue);
     

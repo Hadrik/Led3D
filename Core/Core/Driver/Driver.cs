@@ -2,10 +2,17 @@
 using System.Timers;
 using ColorHelper;
 using Led3D_2.Communication;
+using Led3D_2.Core.Strip;
 using Led3D_2.Utility;
 using Timer = System.Timers.Timer;
 
 namespace Led3D_2.Core.Driver;
+
+public class DriverData
+{
+    public required string Id { get; set; }
+    public required List<StripData> Data { get; set; }
+}
 
 public class Driver : ICommandProvider, ISettingsProvider
 {
@@ -33,8 +40,7 @@ public class Driver : ICommandProvider, ISettingsProvider
     
     public List<string> GetAvailableCommands() => _commandProvider.GetAvailableCommands();
     public object? ExecuteCommand(string command) => _commandProvider.ExecuteCommand(command);
-    public List<IDictionary<string, object?>> GetAvailableSettings() => _settings.GetAvailableSettings();
-    public Dictionary<string, object> GetSettingValues() => _settings.GetSettingValues();
+    public List<IDictionary<string, object?>> GetSettings() => _settings.GetSettings();
     public void UpdateSettings(Dictionary<string, object> newSettings) => _settings.UpdateSettings(newSettings);
     public void UpdateSetting(string key, object newValue) => _settings.UpdateSetting(key, newValue);
 
@@ -81,18 +87,10 @@ public class Driver : ICommandProvider, ISettingsProvider
 
     private void Send(object? o, ElapsedEventArgs e)
     {
-        _settings.Target.Value?.Send(GetFrame());
-    }
-    
-    private List<List<HSV>> GetFrame()
-    {
-        var frame = new List<List<HSV>>();
-        foreach (var strip in _strips)
+        _settings.Target.Value?.Send(new DriverData()
         {
-            var stripFrame = strip.GetColors();
-            if (stripFrame == null) continue;
-            frame.Add(stripFrame);
-        }
-        return frame;
+            Id = Id,
+            Data = _strips.Select(s => s.GetColors()).OfType<StripData>().ToList()
+        });
     }
 }

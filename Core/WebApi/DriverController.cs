@@ -8,18 +8,18 @@ namespace Led3D_2.WebApi;
 [Route("api/[controller]")]
 public class DriverController : ControllerBase
 {
-    private readonly MainController _mainController = MainController.Instance;
+    private readonly Core.Core _core = Core.Core.Instance;
     
     [HttpGet("driverIds")]
     public ActionResult<List<string>> GetDriverIds()
     {
-        return Ok(_mainController.Drivers.Select(d => d.Id).ToList());
+        return Ok(_core.Drivers.Select(d => d.Id).ToList());
     }
     
     [HttpGet("{driverId}/commands")]
     public ActionResult<List<string>> GetDriverCommands(string driverId)  
     {
-        var driver = _mainController.Drivers.FirstOrDefault(d => d.Id == driverId);
+        var driver = _core.Drivers.FirstOrDefault(d => d.Id == driverId);
         if (driver == null)
         {
             return NotFound("Driver not found");
@@ -31,7 +31,7 @@ public class DriverController : ControllerBase
     [HttpPost("{driverId}/commands/{command}")]
     public ActionResult<object> ExecuteDriverCommand(string driverId, string command)
     {
-        if (_mainController.Drivers.FirstOrDefault(d => d.Id == driverId) is not ICommandProvider driver)
+        if (_core.Drivers.FirstOrDefault(d => d.Id == driverId) is not ICommandProvider driver)
         {
             return NotFound("Driver not found");
         }

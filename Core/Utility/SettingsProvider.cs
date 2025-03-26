@@ -12,36 +12,36 @@ namespace Led3D_2.Utility;
 public interface ISettingsProvider
 {
     /// <summary>
-    /// Get types of all settings
+    /// Get all settings
     /// </summary>
     /// <returns>
     /// <code>
     /// [
-    ///     {
-    ///         Name: "settingName",
-    ///         Type: "settingType",
-    ///         Subsettings: [
-    ///             {...}
-    ///         ]
+    ///     { // Setting object
+    ///         Name: string,
+    ///         FriendlyName: string,
+    ///         Description: string,
+    ///         Type: Type,
+    ///         Value: value of any type || subsettings
     ///     }, ...
     /// ]
     /// </code>
     /// </returns>
-    List<IDictionary<string, object?>> GetAvailableSettings();
-    
-    /// <summary>
-    /// Get values of all settings
-    /// </summary>
-    /// <returns>
-    /// Dictionary (setting name, setting value)
-    /// </returns>
-    Dictionary<string, object> GetSettingValues();
+    List<IDictionary<string, object?>> GetSettings();
     
     /// <summary>
     /// Update settings with new values
     /// </summary>
     /// <param name="newSettings">
-    /// Dictionary (setting name, new setting value)
+    /// Dictionary representation of JSON object
+    /// <code>
+    /// {
+    ///     "settingName": newValue,
+    ///     "settingName": {
+    ///         "subsettingName": newValue
+    ///     }
+    /// }
+    /// </code>
     /// </param>
     void UpdateSettings(Dictionary<string, object> newSettings);
     
@@ -52,10 +52,16 @@ public interface ISettingsProvider
     /// Setting name to update
     /// </param>
     /// <param name="newValue">
-    /// New setting value
+    /// Value of any type or subsetting object
     /// </param>
+    /// <exception cref="ArgumentException">
+    /// Incorrect value type or subsetting object
+    /// </exception>
+    /// <exception cref="KeyNotFoundException">
+    /// Setting with the specified name not found
+    /// </exception>
     /// <exception cref="NullReferenceException">
-    /// property not found
+    /// Modifying subsettings of a null object
     /// </exception>
     void UpdateSetting(string key, object newValue);
 }
@@ -75,7 +81,7 @@ public class Setting<T>
         {
             if (Validate != null && !Validate(value))
             {
-                throw new ArgumentException("Invalid value");
+                throw new ArgumentException($"Invalid value '{value}' for setting '{Name}'");
             }
             _value = value;
         }
@@ -87,15 +93,8 @@ public class Setting<T>
 
 
 /// <summary>
-/// Helper class to manage settings of a class
+/// Helper to manage settings of a class
 /// </summary>
-/// <param name="settings">
-/// Instance of the settings class
-/// </param>
-/// <typeparam name="T">
-/// Class implementing the settings.
-/// All properties of the class will be considered a setting
-/// </typeparam>
 public class SettingsProvider : ISettingsProvider
 {
     private static readonly Logger Log = LogManager.GetCurrentClassLogger();
@@ -109,7 +108,7 @@ public class SettingsProvider : ISettingsProvider
         );
     }
 
-    public List<IDictionary<string, object?>> GetAvailableSettings()
+    public List<IDictionary<string, object?>> GetSettings()
     {
         var result = new List<IDictionary<string, object?>>();
         foreach (var property in GetSettingProperties())
@@ -136,21 +135,6 @@ public class SettingsProvider : ISettingsProvider
         }
         return result;
     }
-
-    public Dictionary<string, object> GetSettingValues()
-    {
-        var result = new Dictionary<string, object>();
-        foreach (var property in GetSettingProperties())
-        {
-            dynamic? setting = property.GetValue(this);
-            if (setting != null)
-            {
-                result[setting.Name] = setting.Value;
-            }
-        }
-
-        return result;
-    }
     
     public void UpdateSettings(Dictionary<string, object> newSettings)
     {
@@ -165,44 +149,96 @@ public class SettingsProvider : ISettingsProvider
         foreach (var property in GetSettingProperties())
         {
             dynamic? setting = property.GetValue(this);
-            if (setting != null && setting.Name == key)
-            {
-                var oldValue = setting.Value;
-                var valueType = setting.Type;
-                if (valueType.IsInterface)
-                {
-                    if (newValue is string)
-                    {
-                        var objInstance = InstantiateImplementation(valueType, (string)newValue);
-                        if (objInstance != null)
-                        {
-                            setting.Value = objInstance;
-                        }
-                        else
-                        {
-                            Log.Warn("Failed to instantiate implementation {name} for interface {interface}", 
-                                (string)newValue, valueType.Name);
-                            throw new ArgumentException($"Failed to instantiate implementation {(string)newValue}");
-                        }
-                    }
-                    else
-                    {
-                        Log.Warn("Setting is an interface, but new value is not a string");
-                        throw new ArgumentException("Setting is an interface, but new value is not a string");
-                    }
-                }
-                else
-                {
-                    setting.Value = newValue;
-                }
+            if (setting == null || setting!.Name != key) continue;
 
-                if (_changeHandlers.TryGetValue(setting.Name, out Delegate? handlerDelegate))
-                {
-                    handlerDelegate?.DynamicInvoke(oldValue, setting.Value);
-                }
-                
-                return;
+            var oldValue = setting!.Value;
+        
+            if (setting.Type.IsInterface)
+            {
+                UpdateInterfaceSetting(setting, newValue);
             }
+            else
+            {
+                UpdatePrimitiveSetting(setting, newValue);
+            }
+
+            InvokeChangeHandler(setting.Name, oldValue, setting.Value);
+            return;
+        }
+        
+        Log.Warn("Setting '{name}' not found", key);
+        throw new KeyNotFoundException($"Setting '{key}' not found");
+    }
+    
+    private static void UpdateInterfaceSetting(dynamic setting, object newValue)
+    {
+        if (newValue is string strVal)
+        {
+            UpdateInterfaceFromString(setting, strVal);
+        }
+        else if (typeof(ISettingsProvider).IsAssignableFrom(setting.Type))
+        {
+            UpdateSubSettings(setting, newValue);
+        }
+        else
+        {
+            Log.Warn("Setting is an interface without subsettings, but new value is not a string");
+            throw new ArgumentException("Setting is an interface without subsettings, but new value is not a string");
+        }
+    }
+
+    private static void UpdateInterfaceFromString(dynamic setting, string implementationName)
+    {
+        var objInstance = InstantiateImplementation(setting.Type, implementationName);
+        if (objInstance != null)
+        {
+            setting.Value = objInstance;
+        }
+        else
+        {
+            Log.Warn("Failed to instantiate implementation {name} for interface {interface}", 
+                implementationName, setting.Type.Name);
+            throw new ArgumentException($"Failed to instantiate implementation {implementationName}");
+        }
+    }
+    
+    private static void UpdateSubSettings(dynamic setting, object newValue)
+    {
+        if (setting.Value == null)
+        {
+            Log.Warn("Trying to update subsettings of null object");
+            throw new NullReferenceException("Cannot update subsettings of null object");
+        }
+        
+        if (newValue is Dictionary<string, object?> dictVal)
+        {
+            setting.Value.UpdateSettings(dictVal);
+        }
+        else
+        {
+            Log.Warn("Trying to update subsettings with a non-dictionary object");
+            throw new ArgumentException("Cannot update subsettings with a non-dictionary object");
+        }
+    }
+    
+    private static void UpdatePrimitiveSetting(dynamic setting, object newValue)
+    {
+        try
+        {
+            setting.Value = Convert.ChangeType(newValue, setting.Type);
+        }
+        catch (InvalidCastException ex)
+        {
+            Log.Warn(ex, "Failed to convert {value} to {type}", newValue, setting.Type.Name);
+            throw new ArgumentException($"Failed to convert {newValue} to {setting.Type.Name}");
+        }
+    }
+    
+    private void InvokeChangeHandler(string settingName, object oldValue, object newValue)
+    {
+        if (_changeHandlers.TryGetValue(settingName, out var handlerDelegate))
+        {
+            handlerDelegate.DynamicInvoke(oldValue, newValue);
         }
     }
     

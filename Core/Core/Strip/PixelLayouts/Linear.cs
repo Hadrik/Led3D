@@ -38,8 +38,7 @@ public class Linear : IStripPixelLayout
         _settings.RegisterChangeHandler(_settings.EndPosition, (o, n) => UpdatePixelPositions());
     }
 
-    public Dictionary<string, object> GetSettingValues() => _settings.GetSettingValues();
-    public List<IDictionary<string, object?>> GetAvailableSettings() => _settings.GetAvailableSettings();
+    public List<IDictionary<string, object?>> GetSettings() => _settings.GetSettings();
     public void UpdateSettings(Dictionary<string, object> newSettings) => _settings.UpdateSettings(newSettings);
     public void UpdateSetting(string key, object newValue) => _settings.UpdateSetting(key, newValue);
     

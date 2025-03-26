@@ -7,14 +7,14 @@ namespace Led3D_2.WebApi;
 [Route("api/[controller]")]
 public class CoreController : ControllerBase
 {
-    private readonly MainController _mainController = MainController.Instance;
+    private readonly Core.Core _core = Core.Core.Instance;
 
     [HttpGet("tree")]
     public ActionResult<object> GetSystemTree()
     {
         var tree = new
         {
-            drivers = _mainController.Drivers.Select(d => new
+            drivers = _core.Drivers.Select(d => new
             {
                 Id = d.Id,
                 Strips = d.Strips.Select(s => new
@@ -29,13 +29,13 @@ public class CoreController : ControllerBase
     [HttpGet("commands")]
     public ActionResult<List<string>> GetAvailableCommands()
     {
-        return _mainController.GetAvailableCommands();
+        return _core.GetAvailableCommands();
     }
     
     [HttpPost("commands/{command}")]
     public ActionResult<object> ExecuteCommand(string command)
     {
-        var result = _mainController.ExecuteCommand(command);
+        var result = _core.ExecuteCommand(command);
         return Ok(result);
     }
 }

@@ -16,4 +16,8 @@
       <PackageReference Include="NLog" Version="5.4.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Communication\CommTargets\" />
+    </ItemGroup>
+
 </Project>

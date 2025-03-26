@@ -16,7 +16,7 @@ class Program
         });
 
         var builder = WebApplication.CreateBuilder(args);
-        builder.Services.AddSingleton(MainController.Instance);
+        builder.Services.AddSingleton(Core.Core.Instance);
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen(c =>
