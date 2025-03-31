@@ -63,15 +63,19 @@ public interface ISettingsProvider
     /// <exception cref="NullReferenceException">
     /// Modifying subsettings of a null object
     /// </exception>
+    /// <exception cref="InvalidOperationException">
+    /// Setting is read-only
+    /// </exception>
     void UpdateSetting(string key, object newValue);
 }
 
 
 public class Setting<T>
 {
-    public string Name { get; init; } = string.Empty;
+    public required string Name { get; init; }
     public string? FriendlyName { get; init; }
     public string? Description { get; init; }
+    public bool ReadOnly { get; init; } = false;
     
     private T _value;
     public T Value
@@ -79,6 +83,10 @@ public class Setting<T>
         get => _value;
         set
         {
+            if (ReadOnly)
+            {
+                throw new InvalidOperationException($"Setting '{Name}' is read-only");
+            }
             if (Validate != null && !Validate(value))
             {
                 throw new ArgumentException($"Invalid value '{value}' for setting '{Name}'");
@@ -124,7 +132,7 @@ public class SettingsProvider : ISettingsProvider
 
             if (typeof(ISettingsProvider).IsAssignableFrom(setting.Type))
             {
-                repr.Value = setting.Value?.GetAvailableSettings();
+                repr.Value = setting.Value?.GetSettings();
             }
             else
             {

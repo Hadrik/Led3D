@@ -13,7 +13,7 @@ public interface ICommandProvider
     /// <returns>
     /// List of command names
     /// </returns>
-    List<string> GetAvailableCommands();
+    List<string> GetCommands();
     
     /// <summary>
     /// Execute a command
@@ -53,7 +53,7 @@ public class CommandProvider : ICommandProvider
         _commands[command] = action;
     }
     
-    public List<string> GetAvailableCommands()
+    public List<string> GetCommands()
     {
         return _commands.Keys.ToList();
     }

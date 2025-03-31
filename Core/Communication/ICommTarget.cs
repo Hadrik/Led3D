@@ -8,6 +8,6 @@ namespace Led3D_2.Communication;
 public interface ICommTarget : ISettingsProvider
 {
     bool Connect(IPAddress address, int? port = null);
-    bool Send(DriverData data);
+    bool Send(DriverColorData colorData);
     void Disconnect();
 }

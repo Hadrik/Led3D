@@ -1,5 +1,5 @@
 ﻿using System.Text.Json;
-using Led3D_2.Core;
+using Led3D_2.WebApi;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Led3D_2.WebApi;
@@ -59,9 +59,10 @@ public class StripController : ControllerBase
         {
             return BadRequest("Value must be an object");
         }
+        
         try
         {
-            var value = ParseJsonObject(valueElement);
+            var value = Parser.ParseJsonObject(valueElement);
             strip.UpdateSettings(value);
             return Ok();
         }
@@ -69,30 +70,6 @@ public class StripController : ControllerBase
         {
             return BadRequest(e.Message);
         }
-    }
-    private object ParseJsonElement(JsonElement element)
-    {
-        object result = element.ValueKind switch
-        {
-            JsonValueKind.Object => ParseJsonObject(element),
-            JsonValueKind.String => element.GetString()!,
-            JsonValueKind.Number => element.TryGetInt32(out int intVal) ? (object)intVal : element.GetDouble(),
-            JsonValueKind.True => true,
-            JsonValueKind.False => false,
-            JsonValueKind.Null => null!,
-            _ => throw new ArgumentException($"Unsupported JSON value kind: {element.ValueKind}")
-        };
-        return result;
-    }
-
-    private Dictionary<string, object> ParseJsonObject(JsonElement element)
-    {
-        var result = new Dictionary<string, object>();
-        foreach (var property in element.EnumerateObject())
-        {
-            result[property.Name] = ParseJsonElement(property.Value);
-        }
-        return result;
     }
 }
 

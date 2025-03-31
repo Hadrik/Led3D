@@ -1,4 +1,5 @@
-﻿using Led3D_2.Core;
+﻿using System.Text.Json;
+using Led3D_2.Core;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Led3D_2.WebApi;
@@ -27,15 +28,29 @@ public class VolumeController : ControllerBase
         return Ok(volume.GetSettings());
     }
     
-    // [HttpPost("{volumeId}/settings/{setting}")]
-    // public ActionResult SetVolumeSetting(string volumeId, string setting)
-    // {
-    //     var volume = _mainController.Volumes.FirstOrDefault(v => v.Id == volumeId);
-    //     if (volume == null)
-    //     {
-    //         return NotFound("Volume not found");
-    //     }
-    //     
-    //     return Ok(volume.GetAvailableSettings());
-    // }
+    [HttpPost("{volumeId}/settings")]
+    public ActionResult SetVolumeSetting(string volumeId, [FromBody] JsonElement valueElement)
+    {
+        var volume = _core.Volumes.FirstOrDefault(v => v.Id == volumeId);
+        if (volume == null)
+        {
+            return NotFound("Volume not found");
+        }
+
+        if (valueElement.ValueKind != JsonValueKind.Object)
+        {
+            return BadRequest("Value must be an object");
+        }
+
+        try
+        {
+            var settings = Parser.ParseJsonObject(valueElement);
+            volume.UpdateSettings(settings);
+            return Ok();
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
+    }
 }

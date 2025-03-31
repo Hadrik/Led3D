@@ -25,7 +25,7 @@ public class DriverController : ControllerBase
             return NotFound("Driver not found");
         }
         
-        return Ok(driver.GetAvailableCommands());
+        return Ok(driver.GetCommands());
     }
     
     [HttpPost("{driverId}/commands/{command}")]

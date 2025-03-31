@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using ColorHelper;
+using Led3D_2.Communication;
 using Led3D_2.Core.Volume;
 using Led3D_2.Utility;
 
@@ -8,10 +9,19 @@ namespace Led3D_2.Core.Strip;
 /// <summary>
 /// Data structure that gets passed to a CommunicationTarget.
 /// </summary>
-public class StripData
+public class StripColorData
 {
     public required string Id { get; set; }
     public required List<HSV> Data { get; set; }
+}
+
+/// <summary>
+/// Used only to set up visualizations.
+/// </summary>
+public class StripPositionData
+{
+    public required string Id { get; set; }
+    public required List<Vector3> Data { get; set; }
 }
 
 public class Strip : ISettingsProvider
@@ -29,6 +39,7 @@ public class Strip : ISettingsProvider
             DefaultValue = null
         };
 
+        // FIXME: This needs to take a reference to an existing volume, not create a new one
         public Setting<IVolumeType?> Volume { get; } = new()
         {
             Name = "Volume",
@@ -47,13 +58,23 @@ public class Strip : ISettingsProvider
     public void UpdateSettings(Dictionary<string, object> newSettings) => _settings.UpdateSettings(newSettings);
     public void UpdateSetting(string key, object newValue) => _settings.UpdateSetting(key, newValue);
 
-    public StripData? GetColors()
+    public StripColorData? GetColors()
     {
         if (_settings.Volume.Value == null) return null;
-        return new StripData()
+        return new StripColorData()
         {
             Id = Id,
             Data = _pixels.Select(p => _settings.Volume.Value.GetColorAt(p.Position)).ToList()
+        };
+    }
+    
+    public StripPositionData? GetPositions()
+    {
+        if (_settings.Layout.Value == null) return null;
+        return new StripPositionData()
+        {
+            Id = Id,
+            Data = _pixels.Select(p => p.Position).ToList()
         };
     }
 
@@ -75,6 +96,8 @@ public class Strip : ISettingsProvider
         {
             _pixels[i].Position = positions[i];
         }
+        
+        Core.Instance.VisualizationPositionChange();
     }
 
     private void ChangePixelCount(int difference)
