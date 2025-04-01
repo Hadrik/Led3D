@@ -13,7 +13,7 @@ public class Volume : ISettingsProvider
         public Setting<IVolumeType?> VolumeType { get; } = new()
         {
             Name = "VolumeType",
-            DefaultValue = null
+            Value = null
         };
     }
     private readonly MySettings _settings = new();

@@ -70,33 +70,17 @@ public interface ISettingsProvider
 }
 
 
-public class Setting<T>
+public class Setting<T> : Setting<T, T>;
+public class Setting<T, TOverride>
 {
     public required string Name { get; init; }
     public string? FriendlyName { get; init; }
     public string? Description { get; init; }
     public bool ReadOnly { get; init; } = false;
-    
-    private T _value;
-    public T Value
-    {
-        get => _value;
-        set
-        {
-            if (ReadOnly)
-            {
-                throw new InvalidOperationException($"Setting '{Name}' is read-only");
-            }
-            if (Validate != null && !Validate(value))
-            {
-                throw new ArgumentException($"Invalid value '{value}' for setting '{Name}'");
-            }
-            _value = value;
-        }
-    }
-    public T DefaultValue { init => _value = value; }
-    public Type Type => typeof(T);
-    public Predicate<T>? Validate;
+    public T Value { get; set; }
+    public Type BaseType => typeof(T);
+    public Type OverrideType => typeof(TOverride);
+    public Action<TOverride>? Setter { get; init; }
 }
 
 
@@ -128,9 +112,9 @@ public class SettingsProvider : ISettingsProvider
             repr.Name = setting.Name;
             repr.FriendlyName = setting.FriendlyName;
             repr.Description = setting.Description;
-            repr.Type = setting.Type.Name;
-
-            if (typeof(ISettingsProvider).IsAssignableFrom(setting.Type))
+            repr.Type = setting.OverrideType.Name;
+            
+            if (typeof(ISettingsProvider).IsAssignableFrom(setting.Value.GetType()))
             {
                 repr.Value = setting.Value?.GetSettings();
             }
@@ -160,11 +144,18 @@ public class SettingsProvider : ISettingsProvider
             if (setting == null || setting!.Name != key) continue;
 
             var oldValue = setting!.Value;
-        
-            if (setting.Type.IsInterface)
+            
+            // Does the setting define a type override?
+            if (setting.OverrideType != setting.BaseType)
+            {
+                UpdateCustomSetting(setting, newValue);
+            }
+            // Or is it an interface?
+            else if (setting.Type.IsInterface)
             {
                 UpdateInterfaceSetting(setting, newValue);
             }
+            // If neither just try to set it directly
             else
             {
                 UpdatePrimitiveSetting(setting, newValue);
@@ -184,7 +175,7 @@ public class SettingsProvider : ISettingsProvider
         {
             UpdateInterfaceFromString(setting, strVal);
         }
-        else if (typeof(ISettingsProvider).IsAssignableFrom(setting.Type))
+        else if (typeof(ISettingsProvider).IsAssignableFrom(setting.BaseType))
         {
             UpdateSubSettings(setting, newValue);
         }
@@ -197,7 +188,7 @@ public class SettingsProvider : ISettingsProvider
 
     private static void UpdateInterfaceFromString(dynamic setting, string implementationName)
     {
-        var objInstance = InstantiateImplementation(setting.Type, implementationName);
+        var objInstance = InstantiateImplementation(setting.BaseType, implementationName);
         if (objInstance != null)
         {
             setting.Value = objInstance;
@@ -205,7 +196,7 @@ public class SettingsProvider : ISettingsProvider
         else
         {
             Log.Warn("Failed to instantiate implementation {name} for interface {interface}", 
-                implementationName, setting.Type.Name);
+                implementationName, setting.BaseType.Name);
             throw new ArgumentException($"Failed to instantiate implementation {implementationName}");
         }
     }
@@ -233,12 +224,25 @@ public class SettingsProvider : ISettingsProvider
     {
         try
         {
-            setting.Value = Convert.ChangeType(newValue, setting.Type);
+            setting.Value = Convert.ChangeType(newValue, setting.BaseType);
         }
         catch (InvalidCastException ex)
         {
-            Log.Warn(ex, "Failed to convert {value} to {type}", newValue, setting.Type.Name);
-            throw new ArgumentException($"Failed to convert {newValue} to {setting.Type.Name}");
+            Log.Warn(ex, "Failed to convert {value} to {type}", newValue, setting.BaseType.Name);
+            throw new ArgumentException($"Failed to convert {newValue} to {setting.BaseType.Name}");
+        }
+    }
+
+    private static void UpdateCustomSetting(dynamic setting, object newValue)
+    {
+        try
+        {
+            setting.Setter(newValue);
+        }
+        catch (Exception ex)
+        {
+            Log.Warn(ex, "Failed to set {name} to {value}", setting.Name, newValue);
+            throw new InvalidOperationException($"Failed to set {setting.Name} to {newValue}");
         }
     }
     

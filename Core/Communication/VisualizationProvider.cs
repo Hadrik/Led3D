@@ -19,13 +19,13 @@ public class VisualizationProvider : ISettingsProvider
         {
             Name = "Enabled",
             FriendlyName = "Enable Visualization",
-            DefaultValue = false
+            Value = false
         };
         public Setting<string> Port { get; } = new()
         {
             Name = "Port",
             FriendlyName = "Port",
-            DefaultValue = "1738"
+            Value = "1738"
         };
     }
     private readonly MySettings _settings = new();

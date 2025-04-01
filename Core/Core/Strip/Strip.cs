@@ -36,14 +36,14 @@ public class Strip : ISettingsProvider
         public Setting<IStripPixelLayout?> Layout { get; } = new()
         {
             Name = "Layout",
-            DefaultValue = null
+            Value = null
         };
 
         // FIXME: This needs to take a reference to an existing volume, not create a new one
         public Setting<IVolumeType?> Volume { get; } = new()
         {
             Name = "Volume",
-            DefaultValue = null
+            Value = null
         };
     }
 

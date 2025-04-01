@@ -12,19 +12,19 @@ public class Linear : IStripPixelLayout
         public Setting<int> Length { get; } = new()
         {
             Name = "Length",
-            DefaultValue = 0
+            Value = 0
         };
         
         public Setting<Vector3> StartPosition { get; } = new()
         {
             Name = "StartPosition",
-            DefaultValue = new Vector3(1, 1, 1)
+            Value = new Vector3(1, 1, 1)
         };
         
         public Setting<Vector3> EndPosition { get; } = new()
         {
             Name = "EndPosition",
-            DefaultValue = new Vector3(-1, -1, -1)
+            Value = new Vector3(-1, -1, -1)
         };
     }
     private readonly MySettings _settings = new();

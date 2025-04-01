@@ -31,13 +31,13 @@ public class Driver : ICommandProvider, ISettingsProvider
         public Setting<int> FrameRate { get; } = new()
         {
             Name = "FrameRate",
-            DefaultValue = 30
+            Value = 30
         };
         
         public Setting<ICommTarget?> Target { get; } = new()
         {
             Name = "Target",
-            DefaultValue = null
+            Value = null
         };
     }
     private readonly MySettings _settings = new();

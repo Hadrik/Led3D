@@ -17,7 +17,7 @@ public class Core : Singleton<Core>, ICommandProvider, ISettingsProvider
         {
             Name = "VisualizationProvider",
             Description = "SubSettings for the visualization provider",
-            DefaultValue = new VisualizationProvider(),
+            Value = new VisualizationProvider(),
             ReadOnly = true
         };
     }
