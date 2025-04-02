@@ -1,11 +1,10 @@
 ﻿using System.Text.Json;
-using Led3D_2.WebApi;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Led3D_2.WebApi;
 
 [ApiController]
-[Route("api/Drivers/{driverId}/[controller]")]
+[Route("api/Driver/{driverId}/[controller]")]
 public class StripController : ControllerBase
 {
     private readonly Core.Core _core = Core.Core.Instance;

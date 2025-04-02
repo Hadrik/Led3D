@@ -73,14 +73,44 @@ public interface ISettingsProvider
 public class Setting<T> : Setting<T, T>;
 public class Setting<T, TOverride>
 {
+    /// <summary>
+    /// Name for the option used in the API
+    /// </summary>
     public required string Name { get; init; }
+    
+    /// <summary>
+    /// Name for the option displayed in the UI
+    /// </summary>
     public string? FriendlyName { get; init; }
+    
+    /// <summary>
+    /// Option description
+    /// </summary>
     public string? Description { get; init; }
     public bool ReadOnly { get; init; } = false;
     public T Value { get; set; }
+    
+    /// <summary>
+    /// Type of the stored value
+    /// </summary>
     public Type BaseType => typeof(T);
+    
+    /// <summary>
+    /// Type of the value that the Setter function accepts
+    /// </summary>
     public Type OverrideType => typeof(TOverride);
-    public Action<TOverride>? Setter { get; init; }
+    
+    /// <summary>
+    /// Function that transforms the override value to the base value.
+    /// Only used if the override type is different from the base type.
+    /// </summary>
+    public Func<TOverride, T>? Setter { get; init; }
+    
+    /// <summary>
+    /// Function that returns a list of options for the setting.
+    /// By default, if the option type is an interface it will return a list of all implementations, otherwise null.
+    /// </summary>
+    public Func<IList<string>>? Options { get; init; }
 }
 
 
@@ -96,7 +126,9 @@ public class SettingsProvider : ISettingsProvider
     private IEnumerable<PropertyInfo> GetSettingProperties()
     {
         return GetType().GetProperties().Where(p => 
-            p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(Setting<>)
+            p.PropertyType.IsGenericType &&
+            (p.PropertyType.GetGenericTypeDefinition() == typeof(Setting<>) ||
+             p.PropertyType.GetGenericTypeDefinition() == typeof(Setting<,>))
         );
     }
 
@@ -112,9 +144,24 @@ public class SettingsProvider : ISettingsProvider
             repr.Name = setting.Name;
             repr.FriendlyName = setting.FriendlyName;
             repr.Description = setting.Description;
+            repr.ReadOnly = setting.ReadOnly;
             repr.Type = setting.OverrideType.Name;
             
-            if (typeof(ISettingsProvider).IsAssignableFrom(setting.Value.GetType()))
+            if (setting.Options != null)
+            {
+                repr.Options = setting.Options();
+            }
+            else if (setting.BaseType.IsInterface)
+            {
+                List<Type> impls = Locator.GetClassesImplementing(setting.BaseType);
+                repr.Options = impls.Select(t => t.Name).ToList();
+            }
+            else
+            {
+                repr.Options = null;
+            }
+            
+            if (typeof(ISettingsProvider).IsAssignableFrom(setting.BaseType))
             {
                 repr.Value = setting.Value?.GetSettings();
             }
@@ -150,8 +197,8 @@ public class SettingsProvider : ISettingsProvider
             {
                 UpdateCustomSetting(setting, newValue);
             }
-            // Or is it an interface?
-            else if (setting.Type.IsInterface)
+            // Is it an interface or does it have subsettings?
+            else if (setting.BaseType.IsInterface || typeof(ISettingsProvider).IsAssignableFrom(setting.BaseType))
             {
                 UpdateInterfaceSetting(setting, newValue);
             }
@@ -235,9 +282,15 @@ public class SettingsProvider : ISettingsProvider
 
     private static void UpdateCustomSetting(dynamic setting, object newValue)
     {
+        if (!setting.OverrideType.IsAssignableFrom(newValue.GetType()))
+        {
+            Log.Warn("New value is not of type {type}", setting.OverrideType.Name);
+            throw new ArgumentException($"New value is not of type {setting.OverrideType.Name}");
+        }
+        
         try
         {
-            setting.Setter(newValue);
+            setting.Value = setting.Setter(Convert.ChangeType(newValue, setting.OverrideType));
         }
         catch (Exception ex)
         {

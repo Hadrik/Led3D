@@ -39,11 +39,14 @@ public class Strip : ISettingsProvider
             Value = null
         };
 
-        // FIXME: This needs to take a reference to an existing volume, not create a new one
-        public Setting<IVolumeType?> Volume { get; } = new()
+        public Setting<Volume.Volume?, string> Volume { get; } = new()
         {
             Name = "Volume",
-            Value = null
+            Value = null,
+            Setter = (str) =>
+            {
+                return Core.Instance.Volumes.FirstOrDefault(v => v.Id == str);
+            }
         };
     }
 
@@ -102,15 +105,15 @@ public class Strip : ISettingsProvider
 
     private void ChangePixelCount(int difference)
     {
-        if (difference < 0)
+        if (difference > 0)
         {
             // Remove diff pixels
-            _pixels.RemoveRange(_pixels.Count + difference, -difference);
+            _pixels.RemoveRange(_pixels.Count - difference, difference);
         }
         else
         {
             // Add diff pixels
-            for (var i = 0; i < difference; i++)
+            for (var i = 0; i < -difference; i++)
             {
                 _pixels.Add(new Pixel.Pixel());
             }

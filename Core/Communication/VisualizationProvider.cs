@@ -68,6 +68,7 @@ public class VisualizationProvider : ISettingsProvider
     
         try
         {
+            // FIXME: Doesnt know how to serialize Vector3
             var message = JsonSerializer.Serialize(new
             {
                 type = "positions",
@@ -107,6 +108,7 @@ public class VisualizationProvider : ISettingsProvider
                 {
                     Log.Info("Visualization client connected");
                     _clients.Add(socket);
+                    Core.Core.Instance.VisualizationPositionChange();
                 };
             
                 socket.OnClose = () =>

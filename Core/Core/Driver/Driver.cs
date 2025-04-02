@@ -59,6 +59,7 @@ public class Driver : ICommandProvider, ISettingsProvider
         _timer = new Timer((double)1 / _settings.FrameRate.Value);
         _timer.AutoReset = true;
         _timer.Elapsed += Send;
+        _timer.Start();
     }
 
     public DriverPositionData GetPositionData()
@@ -80,7 +81,7 @@ public class Driver : ICommandProvider, ISettingsProvider
     private void FramerateChange(int from, int to)
     {
         _timer.Stop();
-        _timer.Interval = (double)1 / to;
+        _timer.Interval = (double)1000 / to;
         _timer.Start();
     }
 

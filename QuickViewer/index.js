@@ -1,25 +1,27 @@
 ﻿const socket = new WebSocket('ws://localhost:1738');
 
 // Storage for received data
-const ledData = {
-    positions: {},
-    colors: {}
-};
+const ledData = [];
 
 socket.onmessage = (event) => {
     const message = JSON.parse(event.data);
 
-    // Handle different message types
     if (message.type === "positions") {
-        message.data.forEach(item => {
-            ledData.positions[item.id] = item.data;
-        });
+        let data = message.data[0].Data;
+        data.forEach(strip => {
+            strip[data.id] = []
+            data.Data.forEach((item) => {
+                strip[data.id].push(item)
+            })
+        })
         renderScene();
     }
     else if (message.type === "colors") {
-        message.data.forEach(item => {
-            ledData.colors[item.id] = item.data;
-        });
+        let data = message.data.Data;
+        data.forEach(strip => {
+            let stored = strip[data.id]
+            
+        })
         renderScene();
     }
 };

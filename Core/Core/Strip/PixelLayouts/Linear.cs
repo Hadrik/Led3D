@@ -44,14 +44,15 @@ public class Linear : IStripPixelLayout
     
     private void UpdatePixelPositions()
     {
-        var positions = new List<Vector3>(_settings.Length.Value);
+        var len = _settings.Length.Value;
+        var positions = new List<Vector3>(len);
         
         var start = _settings.StartPosition.Value;
         var end = _settings.EndPosition.Value;
 
-        for (var i = 0; i < positions.Count; i++)
+        for (var i = 0; i < len; i++)
         {
-            positions.Add(Vector3.Lerp(start, end, (float)i / _settings.Length.Value));
+            positions.Add(Vector3.Lerp(start, end, (float)i / len));
         }
         
         PixelPositionsChanged?.Invoke(positions);
