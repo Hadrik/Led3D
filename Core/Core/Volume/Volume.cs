@@ -5,7 +5,7 @@ using Led3D_2.Utility;
 
 namespace Led3D_2.Core.Volume;
 
-public class Volume : ISettingsProvider
+public class Volume : ISettingsProvider, ICommandProvider, IDisposable
 {
     private static int _idCounter = 0;
     public string Id { get; } = $"V{Interlocked.Increment(ref _idCounter):D3}";
@@ -18,6 +18,7 @@ public class Volume : ISettingsProvider
         };
     }
     private readonly MySettings _settings = new();
+    private readonly CommandProvider _commandProvider = new();
     
     public List<IDictionary<string, object?>> GetSettings() => _settings.GetSettings();
     public void UpdateSettings(Dictionary<string, object> newSettings) => _settings.UpdateSettings(newSettings);
@@ -37,6 +38,28 @@ public class Volume : ISettingsProvider
                 t.RedrawVisualization += Redraw;
             }
         });
+        _commandProvider.RegisterCommand("Remove", Remove);
+    }
+    
+    public void Dispose()
+    {
+        if (_settings.VolumeType.Value != null)
+        {
+            _settings.VolumeType.Value.RedrawVisualization -= Redraw;
+        }
+        
+        if (_settings.VolumeType.Value is IDisposable disposable)
+        {
+            disposable.Dispose();
+        }
+        
+        _settings.VolumeType.Value = null;
+    }
+
+    private object Remove()
+    {
+        Core.Instance.RemoveVolume(Id);
+        return new { };
     }
     
     public HSV GetColorAt(Vector3 position)
@@ -55,4 +78,7 @@ public class Volume : ISettingsProvider
     {
         VisualizationProvider.Instance.SendVolume(GetVolumePositionData());
     }
+
+    public List<string> GetCommands() => _commandProvider.GetCommands();
+    public object? ExecuteCommand(string command) => _commandProvider.ExecuteCommand(command);
 }

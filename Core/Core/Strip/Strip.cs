@@ -1,7 +1,5 @@
 ﻿using System.Numerics;
 using ColorHelper;
-using Led3D_2.Communication;
-using Led3D_2.Core.Volume;
 using Led3D_2.Utility;
 
 namespace Led3D_2.Core.Strip;
@@ -24,7 +22,7 @@ public class StripPositionData
     public required List<Vector3> Data { get; set; }
 }
 
-public class Strip : ISettingsProvider
+public class Strip : ISettingsProvider, ICommandProvider, IDisposable
 {
     private static int _idCounter = 0;
     public string Id { get; } = $"S{Interlocked.Increment(ref _idCounter):D3}";
@@ -51,10 +49,38 @@ public class Strip : ISettingsProvider
     }
 
     private readonly MySettings _settings = new();
+    private readonly CommandProvider _commandProvider = new();
 
     public Strip()
     {
         _settings.RegisterChangeHandler(_settings.Layout, OnLayoutChange);
+        _commandProvider.RegisterCommand("Remove", Remove);
+    }
+    
+    public void Dispose()
+    {
+        if (_settings.Layout.Value != null)
+        {
+            _settings.Layout.Value.PixelPositionsChanged -= OnPixelPositionsChanged;
+        }
+        
+        if (_settings.Layout.Value is IDisposable disposable)
+        {
+            disposable.Dispose();
+        }
+        
+        _settings.Layout.Value = null;
+    }
+    
+    private object Remove()
+    {
+        foreach (var driver in Core.Instance.Drivers)
+        {
+            if (driver.Strips.All(s => s.Id != Id)) continue;
+            driver.RemoveStrip(Id);
+            break;
+        }
+        return new { };
     }
 
     public List<IDictionary<string, object?>> GetSettings() => _settings.GetSettings();
@@ -119,4 +145,7 @@ public class Strip : ISettingsProvider
             }
         }
     }
+
+    public List<string> GetCommands() => _commandProvider.GetCommands();
+    public object? ExecuteCommand(string command) => _commandProvider.ExecuteCommand(command);
 }

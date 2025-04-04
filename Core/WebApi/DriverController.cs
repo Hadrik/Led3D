@@ -50,8 +50,7 @@ public class DriverController : ControllerBase
     [HttpGet("{driverId}/settings")]
     public ActionResult<List<object>> GetDriverSettings(string driverId)
     {
-        var driver = _core.Drivers.FirstOrDefault(v => v.Id == driverId);
-        if (driver == null)
+        if (_core.Drivers.FirstOrDefault(d => d.Id == driverId) is not ISettingsProvider driver)
         {
             return NotFound("Driver not found");
         }
@@ -62,8 +61,7 @@ public class DriverController : ControllerBase
     [HttpPost("{driverId}/settings")]
     public ActionResult SetDriverSetting(string driverId, [FromBody] JsonElement valueElement)
     {
-        var driver = _core.Drivers.FirstOrDefault(v => v.Id == driverId);
-        if (driver == null)
+        if (_core.Drivers.FirstOrDefault(d => d.Id == driverId) is not ISettingsProvider driver)
         {
             return NotFound("Driver not found");
         }

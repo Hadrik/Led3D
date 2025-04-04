@@ -19,7 +19,7 @@ public class DriverPositionData
     public required List<StripPositionData> Data { get; set; }
 }
 
-public class Driver : ICommandProvider, ISettingsProvider
+public class Driver : ICommandProvider, ISettingsProvider, IDisposable
 {
     private static int _idCounter = 0;
     public string Id { get; } = $"D{Interlocked.Increment(ref _idCounter):D3}";
@@ -56,10 +56,32 @@ public class Driver : ICommandProvider, ISettingsProvider
         _settings.RegisterChangeHandler(_settings.FrameRate, FramerateChange);
         _settings.RegisterChangeHandler(_settings.Target, TargetChange);
         _commandProvider.RegisterCommand("AddStrip", AddStrip);
+        _commandProvider.RegisterCommand("Remove", Remove);
         _timer = new Timer((double)1 / _settings.FrameRate.Value);
         _timer.AutoReset = true;
         _timer.Elapsed += Send;
         _timer.Start();
+    }
+
+    public void Dispose()
+    {
+        _timer.Stop();
+        _timer.Elapsed -= Send;
+        _timer.Dispose();
+        
+        _settings.Target.Value?.Disconnect();
+        
+        foreach (var strip in _strips)
+        {
+            strip.Dispose();
+        }
+        _strips.Clear();
+    }
+
+    private object Remove()
+    {
+        Core.Instance.RemoveDriver(Id);
+        return new { };
     }
 
     public DriverPositionData GetPositionData()
@@ -85,6 +107,14 @@ public class Driver : ICommandProvider, ISettingsProvider
         var strip = new Strip.Strip();
         _strips.Add(strip);
         return new { stripId = strip.Id };
+    }
+    
+    public void RemoveStrip(string stripId)
+    {
+        var strip = _strips.FirstOrDefault(s => s.Id == stripId);
+        if (strip == null) return;
+        strip.Dispose();
+        _strips.Remove(strip);
     }
 
     private void FramerateChange(int from, int to)

@@ -1,5 +1,5 @@
 ﻿using System.Text.Json;
-using Led3D_2.Core;
+using Led3D_2.Utility;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Led3D_2.WebApi;
@@ -15,12 +15,41 @@ public class VolumeController : ControllerBase
     {
         return Ok(_core.Volumes.Select(v => v.Id).ToList());
     }
+    
+    [HttpGet("{volumeId}/commands")]
+    public ActionResult<List<string>> GetCommands(string volumeId)  
+    {
+        if (_core.Volumes.FirstOrDefault(v => v.Id == volumeId) is not ICommandProvider volume)
+        {
+            return NotFound("Volume not found");
+        }
+        
+        return Ok(volume.GetCommands());
+    }
+    
+    [HttpPost("{volumeId}/commands/{command}")]
+    public ActionResult<object> ExecuteCommand(string volumeId, string command)
+    {
+        if (_core.Volumes.FirstOrDefault(v => v.Id == volumeId) is not ICommandProvider volume)
+        {
+            return NotFound("Volume not found");
+        }
+
+        try
+        {
+            var result = volume.ExecuteCommand(command);
+            return Ok(result);
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
+    }
 
     [HttpGet("{volumeId}/settings")]
-    public ActionResult<List<object>> GetVolumeSettings(string volumeId)
+    public ActionResult<List<object>> GetSettings(string volumeId)
     {
-        var volume = _core.Volumes.FirstOrDefault(v => v.Id == volumeId);
-        if (volume == null)
+        if (_core.Volumes.FirstOrDefault(v => v.Id == volumeId) is not ISettingsProvider volume)
         {
             return NotFound("Volume not found");
         }
@@ -29,10 +58,9 @@ public class VolumeController : ControllerBase
     }
     
     [HttpPost("{volumeId}/settings")]
-    public ActionResult SetVolumeSetting(string volumeId, [FromBody] JsonElement valueElement)
+    public ActionResult SetSetting(string volumeId, [FromBody] JsonElement valueElement)
     {
-        var volume = _core.Volumes.FirstOrDefault(v => v.Id == volumeId);
-        if (volume == null)
+        if (_core.Volumes.FirstOrDefault(v => v.Id == volumeId) is not ISettingsProvider volume)
         {
             return NotFound("Volume not found");
         }

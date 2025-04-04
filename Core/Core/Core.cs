@@ -45,11 +45,27 @@ public class Core : Singleton<Core>, ICommandProvider, ISettingsProvider
         return new { driverId = driver.Id };
     }
 
+    public void RemoveDriver(string driverId)
+    {
+        var driver = _drivers.FirstOrDefault(d => d.Id == driverId);
+        if (driver == null) return;
+        driver.Dispose();
+        _drivers.Remove(driver);
+    }
+
     private object AddVolume()
     {
         var volume = new Volume.Volume();
         _volumes.Add(volume);
         return new { volumeId = volume.Id };
+    }
+    
+    public void RemoveVolume(string volumeId)
+    {
+        var volume = _volumes.FirstOrDefault(v => v.Id == volumeId);
+        if (volume == null) return;
+        volume.Dispose();
+        _volumes.Remove(volume);
     }
 
     public void SendAllVisualizationData()
