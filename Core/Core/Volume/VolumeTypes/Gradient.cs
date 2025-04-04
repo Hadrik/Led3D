@@ -23,7 +23,7 @@ public class Gradient : IVolumeType
         public Setting<Vector3> Scale { get; } = new()
         {
             Name = "Scale",
-            Value = new Vector3(1, 1, 1)
+            Value = new Vector3(2, 2, 2)
         };
         
         public Setting<HSV> StartColor { get; } = new()
@@ -40,9 +40,17 @@ public class Gradient : IVolumeType
     }
     private readonly MySettings _settings = new();
 
+    public event Action? RedrawVisualization;
     public List<IDictionary<string, object?>> GetSettings() => _settings.GetSettings();
     public void UpdateSettings(Dictionary<string, object> newSettings) => _settings.UpdateSettings(newSettings);
     public void UpdateSetting(string key, object newValue) => _settings.UpdateSetting(key, newValue);
+
+    public Gradient()
+    {
+        _settings.RegisterChangeHandler(_settings.Position, (_, _) => Redraw());
+        _settings.RegisterChangeHandler(_settings.Rotation, (_, _) => Redraw());
+        _settings.RegisterChangeHandler(_settings.Scale, (_, _) => Redraw());
+    }
     
     public HSV GetColorAt(Vector3 position)
     {
@@ -51,5 +59,16 @@ public class Gradient : IVolumeType
         var normalized = local.NormalizeByScale(_settings.Scale.Value);
 
         return ColorHelpers.Lerp(_settings.StartColor.Value, _settings.EndColor.Value, normalized.X);
+    }
+
+    public VolumePositionData GetVolumePositionData()
+    {
+        return new VolumePositionData
+            { Position = _settings.Position.Value, Rotation = _settings.Rotation.Value, Scale = _settings.Scale.Value };
+    }
+
+    private void Redraw()
+    {
+        RedrawVisualization?.Invoke();
     }
 }

@@ -100,7 +100,7 @@ public class Strip : ISettingsProvider
             _pixels[i].Position = positions[i];
         }
         
-        Core.Instance.VisualizationPositionChange();
+        Core.Instance.SendAllVisualizationData();
     }
 
     private void ChangePixelCount(int difference)

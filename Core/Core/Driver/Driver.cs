@@ -71,6 +71,15 @@ public class Driver : ICommandProvider, ISettingsProvider
         };
     }
     
+    public DriverColorData GetColorData()
+    {
+        return new DriverColorData
+        {
+            Id = Id,
+            Data = _strips.Select(s => s.GetColors()).OfType<StripColorData>().ToList()
+        };
+    }
+    
     private object AddStrip()
     {
         var strip = new Strip.Strip();
@@ -102,13 +111,9 @@ public class Driver : ICommandProvider, ISettingsProvider
 
     private void Send(object? o, ElapsedEventArgs e)
     {
-        var data = new DriverColorData()
-        {
-            Id = Id,
-            Data = _strips.Select(s => s.GetColors()).OfType<StripColorData>().ToList()
-        };
+        var data = GetColorData();
         
         _settings.Target.Value?.Send(data);
-        Core.Instance.VisualizationColorChange(data);
+        VisualizationProvider.Instance.SendColors(data);
     }
 }

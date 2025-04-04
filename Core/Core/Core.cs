@@ -13,11 +13,11 @@ public class Core : Singleton<Core>, ICommandProvider, ISettingsProvider
 
     private class MySettings : SettingsProvider
     {
-        public Setting<VisualizationProvider> VisualizationProvider { get; } = new()
+        public Setting<VisualizationProvider?> VisualizationProvider { get; } = new()
         {
             Name = "VisualizationProvider",
             Description = "SubSettings for the visualization provider",
-            Value = new VisualizationProvider(),
+            Value = null,
             ReadOnly = true
         };
     }
@@ -33,6 +33,7 @@ public class Core : Singleton<Core>, ICommandProvider, ISettingsProvider
     
     public Core()
     {
+        _settings.VisualizationProvider.Value = VisualizationProvider.Instance;
         _commandProvider.RegisterCommand("AddDriver", AddDriver);
         _commandProvider.RegisterCommand("AddVolume", AddVolume);
     }
@@ -51,15 +52,14 @@ public class Core : Singleton<Core>, ICommandProvider, ISettingsProvider
         return new { volumeId = volume.Id };
     }
 
-    public void VisualizationPositionChange()
+    public void SendAllVisualizationData()
     {
-        _settings.VisualizationProvider.Value.SendPositions(
-            _drivers.Select(d => d.GetPositionData()).ToList()
-        );
-    }
-    
-    public void VisualizationColorChange(DriverColorData data)
-    {
-        _settings.VisualizationProvider.Value.SendColors(data);
+        _drivers.ForEach(d =>
+        {
+            _settings.VisualizationProvider.Value?.SendColors(d.GetColorData());
+            _settings.VisualizationProvider.Value?.SendPositions(d.GetPositionData());
+        });
+        
+        _volumes.ForEach(v => _settings.VisualizationProvider.Value?.SendVolume(v.GetVolumePositionData()));
     }
 }
