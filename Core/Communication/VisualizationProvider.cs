@@ -37,10 +37,6 @@ public class VisualizationProvider : Singleton<VisualizationProvider>, ISettings
     private readonly List<IWebSocketConnection> _clients = [];
     private readonly JsonSerializerOptions _jsonOptions = new() { Converters = { new Vector3Converter() } };
 
-    public List<IDictionary<string, object?>> GetSettings() => _settings.GetSettings();
-    public void UpdateSettings(Dictionary<string, object> newSettings) => _settings.UpdateSettings(newSettings);
-    public void UpdateSetting(string key, object newValue) => _settings.UpdateSetting(key, newValue);
-
     public VisualizationProvider()
     {
         _settings.RegisterChangeHandler(_settings.Enabled, Toggle);
@@ -171,4 +167,8 @@ public class VisualizationProvider : Singleton<VisualizationProvider>, ISettings
             client.Send(message);
         }
     }
+    
+    public List<IDictionary<string, object?>> GetSettings() => _settings.GetSettings();
+    public void UpdateSettings(Dictionary<string, object> newSettings) => _settings.UpdateSettings(newSettings);
+    public void UpdateSetting(string key, object newValue) => _settings.UpdateSetting(key, newValue);
 }

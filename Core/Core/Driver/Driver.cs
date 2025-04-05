@@ -42,12 +42,6 @@ public class Driver : ICommandProvider, ISettingsProvider, IDisposable
     }
     private readonly MySettings _settings = new();
     private readonly CommandProvider _commandProvider = new();
-    
-    public List<string> GetCommands() => _commandProvider.GetCommands();
-    public object? ExecuteCommand(string command) => _commandProvider.ExecuteCommand(command);
-    public List<IDictionary<string, object?>> GetSettings() => _settings.GetSettings();
-    public void UpdateSettings(Dictionary<string, object> newSettings) => _settings.UpdateSettings(newSettings);
-    public void UpdateSetting(string key, object newValue) => _settings.UpdateSetting(key, newValue);
 
     private readonly Timer _timer;
     
@@ -146,4 +140,10 @@ public class Driver : ICommandProvider, ISettingsProvider, IDisposable
         _settings.Target.Value?.Send(data);
         VisualizationProvider.Instance.SendColors(data);
     }
+    
+    public List<string> GetCommands() => _commandProvider.GetCommands();
+    public object? ExecuteCommand(string command) => _commandProvider.ExecuteCommand(command);
+    public List<IDictionary<string, object?>> GetSettings() => _settings.GetSettings();
+    public void UpdateSettings(Dictionary<string, object> newSettings) => _settings.UpdateSettings(newSettings);
+    public void UpdateSetting(string key, object newValue) => _settings.UpdateSetting(key, newValue);
 }

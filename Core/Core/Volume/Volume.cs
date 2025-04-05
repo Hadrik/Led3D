@@ -19,10 +19,6 @@ public class Volume : ISettingsProvider, ICommandProvider, IDisposable
     }
     private readonly MySettings _settings = new();
     private readonly CommandProvider _commandProvider = new();
-    
-    public List<IDictionary<string, object?>> GetSettings() => _settings.GetSettings();
-    public void UpdateSettings(Dictionary<string, object> newSettings) => _settings.UpdateSettings(newSettings);
-    public void UpdateSetting(string key, object newValue) => _settings.UpdateSetting(key, newValue);
 
     public Volume()
     {
@@ -81,4 +77,7 @@ public class Volume : ISettingsProvider, ICommandProvider, IDisposable
 
     public List<string> GetCommands() => _commandProvider.GetCommands();
     public object? ExecuteCommand(string command) => _commandProvider.ExecuteCommand(command);
+    public List<IDictionary<string, object?>> GetSettings() => _settings.GetSettings();
+    public void UpdateSettings(Dictionary<string, object> newSettings) => _settings.UpdateSettings(newSettings);
+    public void UpdateSetting(string key, object newValue) => _settings.UpdateSetting(key, newValue);
 }

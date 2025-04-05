@@ -83,10 +83,6 @@ public class Strip : ISettingsProvider, ICommandProvider, IDisposable
         return new { };
     }
 
-    public List<IDictionary<string, object?>> GetSettings() => _settings.GetSettings();
-    public void UpdateSettings(Dictionary<string, object> newSettings) => _settings.UpdateSettings(newSettings);
-    public void UpdateSetting(string key, object newValue) => _settings.UpdateSetting(key, newValue);
-
     public StripColorData? GetColors()
     {
         if (_settings.Volume.Value == null) return null;
@@ -148,4 +144,7 @@ public class Strip : ISettingsProvider, ICommandProvider, IDisposable
 
     public List<string> GetCommands() => _commandProvider.GetCommands();
     public object? ExecuteCommand(string command) => _commandProvider.ExecuteCommand(command);
+    public List<IDictionary<string, object?>> GetSettings() => _settings.GetSettings();
+    public void UpdateSettings(Dictionary<string, object> newSettings) => _settings.UpdateSettings(newSettings);
+    public void UpdateSetting(string key, object newValue) => _settings.UpdateSetting(key, newValue);
 }
