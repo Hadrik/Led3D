@@ -4,8 +4,6 @@ using NLog;
 
 namespace Led3D_2.Utility;
 
-// TODO: Fix outdated comments
-
 /// <summary>
 /// Any class that stores settings accessible from the API has to implement this interface
 /// </summary>
@@ -69,9 +67,27 @@ public interface ISettingsProvider
     void UpdateSetting(string key, object newValue);
 }
 
+public interface ISettingsConverter<T>
+{
+    /// <summary>
+    /// Return an object representation of the setting
+    /// </summary>
+    /// <param name="obj">
+    /// Object to convert
+    /// </param>
+    object? ToObject(T obj);
+    
+    /// <summary>
+    /// Create a new setting value from an object
+    /// </summary>
+    /// <param name="obj">
+    /// Object to convert
+    /// </param>
+    /// <returns></returns>
+    T FromObject(object obj);
+}
 
-public class Setting<T> : Setting<T, T>;
-public class Setting<T, TOverride>
+public class Setting<T>
 {
     /// <summary>
     /// Name for the option used in the API
@@ -88,29 +104,40 @@ public class Setting<T, TOverride>
     /// </summary>
     public string? Description { get; init; }
     public bool ReadOnly { get; init; } = false;
-    public T Value { get; set; }
+    public T Value { get; set; } = default!;
     
     /// <summary>
     /// Type of the stored value
     /// </summary>
-    public Type BaseType => typeof(T);
+    public Type Type => typeof(T);
     
     /// <summary>
-    /// Type of the value that the Setter function accepts
+    /// Custom converter for the setting
     /// </summary>
-    public Type OverrideType => typeof(TOverride);
-    
-    /// <summary>
-    /// Function that transforms the override value to the base value.
-    /// Only used if the override type is different from the base type.
-    /// </summary>
-    public Func<TOverride, T>? Setter { get; init; }
+    public ISettingsConverter<T>? Converter { get; init; }
     
     /// <summary>
     /// Function that returns a list of options for the setting.
     /// By default, if the option type is an interface it will return a list of all implementations, otherwise null.
     /// </summary>
     public Func<IList<string>>? Options { get; init; }
+
+    
+    /// <summary>
+    /// Wrapper function for the converter. Dynamics don't work with generics
+    /// </summary>
+    public void ConverterFromObject(object newValue)
+    {
+        if (Converter != null)
+        {
+            Value = Converter.FromObject(newValue);
+        }
+    }
+    /// <inheritdoc cref="ConverterFromObject"/>
+    public object? ConverterToObject()
+    {
+        return Converter?.ToObject(Value);
+    }
 }
 
 
@@ -127,8 +154,7 @@ public class SettingsProvider : ISettingsProvider
     {
         return GetType().GetProperties().Where(p => 
             p.PropertyType.IsGenericType &&
-            (p.PropertyType.GetGenericTypeDefinition() == typeof(Setting<>) ||
-             p.PropertyType.GetGenericTypeDefinition() == typeof(Setting<,>))
+            p.PropertyType.GetGenericTypeDefinition() == typeof(Setting<>)
         );
     }
 
@@ -145,15 +171,15 @@ public class SettingsProvider : ISettingsProvider
             repr.FriendlyName = setting.FriendlyName;
             repr.Description = setting.Description;
             repr.ReadOnly = setting.ReadOnly;
-            repr.Type = setting.OverrideType.Name;
+            repr.Type = setting.Type.Name;
             
             if (setting.Options != null)
             {
                 repr.Options = setting.Options();
             }
-            else if (setting.BaseType.IsInterface)
+            else if (setting.Type.IsInterface)
             {
-                List<Type> impls = Locator.GetClassesImplementing(setting.BaseType);
+                List<Type> impls = Locator.GetClassesImplementing(setting.Type);
                 repr.Options = impls.Select(t => t.Name).ToList();
             }
             else
@@ -161,7 +187,11 @@ public class SettingsProvider : ISettingsProvider
                 repr.Options = null;
             }
             
-            if (typeof(ISettingsProvider).IsAssignableFrom(setting.BaseType))
+            if (setting.Converter != null)
+            {
+                repr.Value = setting.ConverterToObject();
+            }
+            else if (typeof(ISettingsProvider).IsAssignableFrom(setting.Type))
             {
                 repr.Value = setting.Value?.GetSettings();
             }
@@ -192,13 +222,13 @@ public class SettingsProvider : ISettingsProvider
 
             var oldValue = setting!.Value;
             
-            // Does the setting define a type override?
-            if (setting.OverrideType != setting.BaseType)
+            // Does the setting define converter?
+            if (setting.Converter != null)
             {
-                UpdateCustomSetting(setting, newValue);
+                setting.ConverterFromObject(newValue);
             }
             // Is it an interface or does it have subsettings?
-            else if (setting.BaseType.IsInterface || typeof(ISettingsProvider).IsAssignableFrom(setting.BaseType))
+            else if (setting.Type.IsInterface || typeof(ISettingsProvider).IsAssignableFrom(setting.Type))
             {
                 UpdateInterfaceSetting(setting, newValue);
             }
@@ -222,7 +252,7 @@ public class SettingsProvider : ISettingsProvider
         {
             UpdateInterfaceFromString(setting, strVal);
         }
-        else if (typeof(ISettingsProvider).IsAssignableFrom(setting.BaseType))
+        else if (typeof(ISettingsProvider).IsAssignableFrom(setting.Type))
         {
             UpdateSubSettings(setting, newValue);
         }
@@ -235,7 +265,7 @@ public class SettingsProvider : ISettingsProvider
 
     private static void UpdateInterfaceFromString(dynamic setting, string implementationName)
     {
-        var objInstance = InstantiateImplementation(setting.BaseType, implementationName);
+        var objInstance = InstantiateImplementation(setting.Type, implementationName);
         if (objInstance != null)
         {
             setting.Value = objInstance;
@@ -243,7 +273,7 @@ public class SettingsProvider : ISettingsProvider
         else
         {
             Log.Warn("Failed to instantiate implementation {name} for interface {interface}", 
-                implementationName, setting.BaseType.Name);
+                implementationName, setting.Type.Name);
             throw new ArgumentException($"Failed to instantiate implementation {implementationName}");
         }
     }
@@ -269,33 +299,19 @@ public class SettingsProvider : ISettingsProvider
     
     private static void UpdatePrimitiveSetting(dynamic setting, object newValue)
     {
+        if (setting.ReadOnly)
+        {
+            Log.Warn("Setting {name} is read-only", setting.Name);
+            throw new InvalidOperationException($"Setting {setting.Name} is read-only");
+        }
         try
         {
-            setting.Value = Convert.ChangeType(newValue, setting.BaseType);
+            setting.Value = Convert.ChangeType(newValue, setting.Type);
         }
         catch (InvalidCastException ex)
         {
-            Log.Warn(ex, "Failed to convert {value} to {type}", newValue, setting.BaseType.Name);
-            throw new ArgumentException($"Failed to convert {newValue} to {setting.BaseType.Name}");
-        }
-    }
-
-    private static void UpdateCustomSetting(dynamic setting, object newValue)
-    {
-        if (!setting.OverrideType.IsAssignableFrom(newValue.GetType()))
-        {
-            Log.Warn("New value is not of type {type}", setting.OverrideType.Name);
-            throw new ArgumentException($"New value is not of type {setting.OverrideType.Name}");
-        }
-        
-        try
-        {
-            setting.Value = setting.Setter(Convert.ChangeType(newValue, setting.OverrideType));
-        }
-        catch (Exception ex)
-        {
-            Log.Warn(ex, "Failed to set {name} to {value}", setting.Name, newValue);
-            throw new InvalidOperationException($"Failed to set {setting.Name} to {newValue}");
+            Log.Warn(ex, "Failed to convert {value} to {type}", newValue, setting.Type.Name);
+            throw new ArgumentException($"Failed to convert {newValue} to {setting.Type.Name}");
         }
     }
     

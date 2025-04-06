@@ -1,6 +1,7 @@
 ﻿using System.Numerics;
 using ColorHelper;
 using Led3D_2.Utility;
+using Led3D_2.Utility.Converters;
 
 namespace Led3D_2.Core.Volume.VolumeTypes;
 
@@ -11,31 +12,36 @@ public class Gradient : IVolumeType
         public Setting<Vector3> Position { get; } = new()
         {
             Name = "Position",
-            Value = new Vector3(0, 0, 0)
+            Value = new Vector3(0, 0, 0),
+            Converter = new Vector3SettingsConverter()
         };
         
         public Setting<Vector3> Rotation { get; } = new()
         {
             Name = "Rotation",
-            Value = new Vector3(0, 0, 0)
+            Value = new Vector3(0, 0, 0),
+            Converter = new Vector3SettingsConverter()
         };
         
         public Setting<Vector3> Scale { get; } = new()
         {
             Name = "Scale",
-            Value = new Vector3(2, 2, 2)
+            Value = new Vector3(2, 2, 2),
+            Converter = new Vector3SettingsConverter()
         };
         
         public Setting<HSV> StartColor { get; } = new()
         {
             Name = "StartColor",
-            Value = new HSV(0, 255, 255)
+            Value = new HSV(0, 255, 255),
+            Converter = new HsvSettingsConverter()
         };
         
         public Setting<HSV> EndColor { get; } = new()
         {
             Name = "EndColor",
-            Value = new HSV(180, 255, 255)
+            Value = new HSV(180, 255, 255),
+            Converter = new HsvSettingsConverter()
         };
     }
     private readonly MySettings _settings = new();

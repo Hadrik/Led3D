@@ -35,7 +35,6 @@ public class VisualizationProvider : Singleton<VisualizationProvider>, ISettings
 
     private WebSocketServer? _server;
     private readonly List<IWebSocketConnection> _clients = [];
-    private readonly JsonSerializerOptions _jsonOptions = new() { Converters = { new Vector3Converter() } };
 
     public VisualizationProvider()
     {
@@ -52,7 +51,7 @@ public class VisualizationProvider : Singleton<VisualizationProvider>, ISettings
             {
                 type = "colors",
                 data = colors
-            }, _jsonOptions);
+            });
 
             BroadcastMessage(message);
         }
@@ -72,7 +71,7 @@ public class VisualizationProvider : Singleton<VisualizationProvider>, ISettings
             {
                 type = "positions",
                 data = positions
-            }, _jsonOptions);
+            });
 
             BroadcastMessage(message);
         }
@@ -92,7 +91,7 @@ public class VisualizationProvider : Singleton<VisualizationProvider>, ISettings
             {
                 type = "volume",
                 data = volume
-            }, _jsonOptions);
+            });
 
             BroadcastMessage(message);
         }

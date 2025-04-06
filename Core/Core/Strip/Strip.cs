@@ -37,14 +37,11 @@ public class Strip : ISettingsProvider, ICommandProvider, IDisposable
             Value = null
         };
 
-        public Setting<Volume.Volume?, string> Volume { get; } = new()
+        public Setting<Volume.Volume?> Volume { get; } = new()
         {
             Name = "Volume",
             Value = null,
-            Setter = (str) =>
-            {
-                return Core.Instance.Volumes.FirstOrDefault(v => v.Id == str);
-            }
+            Converter = new VolumeConverter()
         };
     }
 
@@ -147,4 +144,17 @@ public class Strip : ISettingsProvider, ICommandProvider, IDisposable
     public List<IDictionary<string, object?>> GetSettings() => _settings.GetSettings();
     public void UpdateSettings(Dictionary<string, object> newSettings) => _settings.UpdateSettings(newSettings);
     public void UpdateSetting(string key, object newValue) => _settings.UpdateSetting(key, newValue);
+
+    private class VolumeConverter : ISettingsConverter<Volume.Volume?>
+    {
+        public object? ToObject(Volume.Volume? vol)
+        {
+            return vol?.Id;
+        }
+
+        public Volume.Volume? FromObject(object obj)
+        {
+            return obj is not string id ? null : Core.Instance.Volumes.FirstOrDefault(v => v.Id == id);
+        }
+    }
 }

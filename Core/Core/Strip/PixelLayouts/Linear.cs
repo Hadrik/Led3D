@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using Led3D_2.Utility;
+using Led3D_2.Utility.Converters;
 using NLog;
 
 namespace Led3D_2.Core.Strip.PixelLayouts;
@@ -18,13 +19,15 @@ public class Linear : IStripPixelLayout
         public Setting<Vector3> StartPosition { get; } = new()
         {
             Name = "StartPosition",
-            Value = new Vector3(1, 1, 1)
+            Value = new Vector3(1, 1, 1),
+            Converter = new Vector3SettingsConverter()
         };
         
         public Setting<Vector3> EndPosition { get; } = new()
         {
             Name = "EndPosition",
-            Value = new Vector3(-1, -1, -1)
+            Value = new Vector3(-1, -1, -1),
+            Converter = new Vector3SettingsConverter()
         };
     }
     private readonly MySettings _settings = new();
