@@ -8,6 +8,7 @@ namespace Led3D_2.Core.Strip.PixelLayouts;
 public class Linear : IStripPixelLayout
 {
     private static readonly Logger Log = LogManager.GetCurrentClassLogger();
+
     private class MySettings : SettingsProvider
     {
         public Setting<int> Length { get; } = new()
@@ -15,14 +16,14 @@ public class Linear : IStripPixelLayout
             Name = "Length",
             Value = 0
         };
-        
+
         public Setting<Vector3> StartPosition { get; } = new()
         {
             Name = "StartPosition",
             Value = new Vector3(1, 1, 1),
             Converter = new Vector3SettingsConverter()
         };
-        
+
         public Setting<Vector3> EndPosition { get; } = new()
         {
             Name = "EndPosition",
@@ -30,10 +31,14 @@ public class Linear : IStripPixelLayout
             Converter = new Vector3SettingsConverter()
         };
     }
-    private readonly MySettings _settings = new();
+
+    private readonly MySettings _settings = new()
+    {
+        Converters = [ new Vector3SettingsConverter() ]
+    };
 
     public event Action<List<Vector3>>? PixelPositionsChanged;
-    
+
     public Linear()
     {
         _settings.RegisterChangeHandler(_settings.Length, (o, n) => UpdatePixelPositions());
@@ -45,7 +50,7 @@ public class Linear : IStripPixelLayout
     {
         var len = _settings.Length.Value;
         var positions = new List<Vector3>(len);
-        
+
         var start = _settings.StartPosition.Value;
         var end = _settings.EndPosition.Value;
 
@@ -53,9 +58,10 @@ public class Linear : IStripPixelLayout
         {
             positions.Add(Vector3.Lerp(start, end, (float)i / len));
         }
-        
+
         PixelPositionsChanged?.Invoke(positions);
     }
+
     public List<IDictionary<string, object?>> GetSettings() => _settings.GetSettings();
     public void UpdateSettings(Dictionary<string, object> newSettings) => _settings.UpdateSettings(newSettings);
     public void UpdateSetting(string key, object newValue) => _settings.UpdateSetting(key, newValue);

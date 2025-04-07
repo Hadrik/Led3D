@@ -12,39 +12,38 @@ public class Gradient : IVolumeType
         public Setting<Vector3> Position { get; } = new()
         {
             Name = "Position",
-            Value = new Vector3(0, 0, 0),
-            Converter = new Vector3SettingsConverter()
+            Value = new Vector3(0, 0, 0)
         };
         
         public Setting<Vector3> Rotation { get; } = new()
         {
             Name = "Rotation",
-            Value = new Vector3(0, 0, 0),
-            Converter = new Vector3SettingsConverter()
+            Value = new Vector3(0, 0, 0)
         };
         
         public Setting<Vector3> Scale { get; } = new()
         {
             Name = "Scale",
-            Value = new Vector3(2, 2, 2),
-            Converter = new Vector3SettingsConverter()
+            Value = new Vector3(2, 2, 2)
         };
         
         public Setting<HSV> StartColor { get; } = new()
         {
             Name = "StartColor",
-            Value = new HSV(0, 255, 255),
-            Converter = new HsvSettingsConverter()
+            Value = new HSV(0, 255, 255)
         };
         
         public Setting<HSV> EndColor { get; } = new()
         {
             Name = "EndColor",
-            Value = new HSV(180, 255, 255),
-            Converter = new HsvSettingsConverter()
+            Value = new HSV(180, 255, 255)
         };
     }
-    private readonly MySettings _settings = new();
+
+    private readonly MySettings _settings = new()
+    {
+        Converters = [ new HsvSettingsConverter(), new Vector3SettingsConverter() ]
+    };
 
     public event Action? RedrawVisualization;
 

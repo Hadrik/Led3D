@@ -1,5 +1,6 @@
 ﻿using System.Dynamic;
 using System.Reflection;
+using System.Text.Json.Serialization;
 using NLog;
 
 namespace Led3D_2.Utility;
@@ -67,7 +68,14 @@ public interface ISettingsProvider
     void UpdateSetting(string key, object newValue);
 }
 
-public interface ISettingsConverter<T>
+public interface ISettingsConverter
+{
+    object? ToObject(object obj);
+    object FromObject(object obj);
+    bool CanConvert(Type type);
+}
+
+public interface ISettingsConverter<T> : ISettingsConverter
 {
     /// <summary>
     /// Return an object representation of the setting
@@ -83,8 +91,22 @@ public interface ISettingsConverter<T>
     /// <param name="obj">
     /// Object to convert
     /// </param>
-    /// <returns></returns>
-    T FromObject(object obj);
+    new T FromObject(object obj);
+
+    /// <summary>
+    /// Check if the converter can convert the specified type
+    /// </summary>
+    /// <param name="type">
+    /// Type to check
+    /// </param>
+    new bool CanConvert(Type type)
+    {
+        return type == typeof(T);
+    }
+    
+    object? ISettingsConverter.ToObject(object obj) => ToObject((T)obj);
+    object ISettingsConverter.FromObject(object obj) => FromObject(obj);
+    bool ISettingsConverter.CanConvert(Type type) => CanConvert(type);
 }
 
 public class Setting<T>
@@ -150,12 +172,20 @@ public class SettingsProvider : ISettingsProvider
     
     private readonly Dictionary<string, Delegate> _changeHandlers = new();
 
+    public List<ISettingsConverter> Converters { get; init; } = [];
+    
     private IEnumerable<PropertyInfo> GetSettingProperties()
     {
         return GetType().GetProperties().Where(p => 
             p.PropertyType.IsGenericType &&
             p.PropertyType.GetGenericTypeDefinition() == typeof(Setting<>)
         );
+    }
+
+    private bool TryGetConverter(Type type, out ISettingsConverter? converter)
+    {
+        converter = Converters.FirstOrDefault(c => c.CanConvert(type));
+        return converter != null;
     }
 
     public List<IDictionary<string, object?>> GetSettings()
@@ -190,6 +220,10 @@ public class SettingsProvider : ISettingsProvider
             if (setting.Converter != null)
             {
                 repr.Value = setting.ConverterToObject();
+            }
+            else if (TryGetConverter(setting.Type, out ISettingsConverter converter))
+            {
+                repr.Value = converter.ToObject(setting.Value);
             }
             else if (typeof(ISettingsProvider).IsAssignableFrom(setting.Type))
             {
@@ -226,6 +260,11 @@ public class SettingsProvider : ISettingsProvider
             if (setting.Converter != null)
             {
                 setting.ConverterFromObject(newValue);
+            }
+            // Is there a global converter for it?
+            else if (TryGetConverter(setting.Type, out ISettingsConverter converter))
+            {
+                UpdatePrimitiveSetting(setting, converter.FromObject(newValue));
             }
             // Is it an interface or does it have subsettings?
             else if (setting.Type.IsInterface || typeof(ISettingsProvider).IsAssignableFrom(setting.Type))
